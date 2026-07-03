@@ -1,0 +1,880 @@
+<title>治理看板 — 3 個版面方向</title>
+<style>
+  :root {
+    --paper: #f5f6f8;
+    --surface: #ffffff;
+    --surface-sunken: #eef0f3;
+    --ink: #14181f;
+    --ink-dim: #5b6472;
+    --ink-faint: #8890a0;
+    --line: #dde1e7;
+    --line-strong: #c3c9d3;
+    --accent: #3446d6;
+    --accent-soft: #eaeefc;
+    --good: #1f9d6b;
+    --good-soft: #e4f5ee;
+    --warn: #c9860a;
+    --warn-soft: #fbf1de;
+    --crit: #d23b3b;
+    --crit-soft: #fbe8e8;
+    --muted: #6b7280;
+    --muted-soft: #eceef1;
+    --shadow-card: 0 1px 2px rgba(20, 24, 31, 0.06), 0 1px 1px rgba(20, 24, 31, 0.04);
+    --shadow-card-hover: 0 6px 20px rgba(20, 24, 31, 0.12);
+    --shadow-modal: 0 24px 64px rgba(20, 24, 31, 0.28);
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--paper);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 { text-wrap: balance; font-weight: 650; }
+
+  button { font-family: inherit; cursor: pointer; }
+  button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 70, 214, 0.35);
+    border-radius: 6px;
+  }
+
+  .tabular { font-variant-numeric: tabular-nums; }
+  .mono { font-family: var(--font-mono); }
+
+  /* ── Top chrome ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-row1 {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 18px 28px 4px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .brand-name { font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 12.5px; color: var(--ink-dim); }
+
+  .variant-switch {
+    display: flex;
+    gap: 4px;
+    background: var(--surface-sunken);
+    border-radius: 10px;
+    padding: 3px;
+  }
+  .variant-switch button {
+    border: none;
+    background: transparent;
+    color: var(--ink-dim);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 8px;
+    transition: background-color .15s ease, color .15s ease;
+    white-space: nowrap;
+  }
+  .variant-switch button:hover { color: var(--ink); }
+  .variant-switch button.is-active { background: var(--ink); color: #fff; }
+  .variant-switch .vlabel { opacity: .65; font-weight: 500; margin-right: 5px; }
+
+  .topbar-row2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 28px 14px;
+    flex-wrap: wrap;
+  }
+  .stat-chip {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    background: var(--surface-sunken);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12.5px;
+    color: var(--ink-dim);
+  }
+  .stat-chip strong { font-size: 15px; color: var(--ink); font-weight: 700; }
+  .stat-chip.is-crit { background: var(--crit-soft); color: var(--crit); }
+  .stat-chip.is-crit strong { color: var(--crit); }
+  .stat-chip.is-accent strong { color: var(--accent); }
+
+  .variant-note {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    padding: 0 28px 14px;
+    max-width: 62ch;
+    line-height: 1.5;
+  }
+
+  .variant { display: none; }
+  .variant.is-active { display: block; }
+
+  /* ── shared: risk / stage / phase pills ── */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .risk-low { background: var(--muted-soft); color: var(--muted); }
+  .risk-medium { background: var(--warn-soft); color: var(--warn); }
+  .risk-high { background: var(--crit-soft); color: var(--crit); }
+  .agent-pill { background: var(--accent-soft); color: var(--accent); }
+  .approval-pill { background: var(--surface); color: var(--ink-dim); border: 1px solid var(--line-strong); }
+
+  .risk-stripe-low::before { background: var(--muted); }
+  .risk-stripe-medium::before { background: var(--warn); }
+  .risk-stripe-high::before { background: var(--crit); }
+
+  /* ── card ── */
+  .ticket-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px 10px 14px;
+    box-shadow: var(--shadow-card);
+    cursor: pointer;
+    transition: box-shadow .15s ease, transform .15s ease;
+    text-align: left;
+    width: 100%;
+    display: block;
+  }
+  .ticket-card::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 8px; bottom: 8px;
+    width: 3px;
+    border-radius: 3px;
+  }
+  .ticket-card:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-1px); }
+  .ticket-id { font-size: 10.5px; color: var(--ink-faint); font-weight: 600; letter-spacing: 0.02em; }
+  .ticket-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 3px 0 8px;
+  }
+  .ticket-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+  .ticket-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+  }
+  .progress-frac { display: inline-flex; align-items: center; gap: 4px; }
+  .progress-frac svg { display: block; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ticket-card, .modal, .modal-overlay { transition: none !important; }
+  }
+
+  /* ══════════ Variant A — Control Tower (12 lanes) ══════════ */
+  #variant-a .lanes {
+    display: flex;
+    gap: 1px;
+    background: var(--line);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    border-top: 1px solid var(--line);
+  }
+  .lane {
+    flex: 0 0 232px;
+    scroll-snap-align: start;
+    background: var(--paper);
+    min-height: calc(100vh - 156px);
+    display: flex;
+    flex-direction: column;
+  }
+  .lane-head {
+    position: sticky;
+    top: 0;
+    padding: 12px 12px 10px;
+    border-bottom: 2px solid var(--line-strong);
+    background: var(--paper);
+  }
+  .lane-phase {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 4px;
+  }
+  .lane-title-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .lane-title { font-size: 13px; font-weight: 700; }
+  .lane-gauge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--surface-sunken);
+    color: var(--ink-dim);
+    flex-shrink: 0;
+  }
+  .lane-gauge.is-over { background: var(--crit); color: #fff; }
+  .lane-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .lane-empty { font-size: 11.5px; color: var(--ink-faint); padding: 10px 2px; }
+
+  /* ══════════ Variant B — Phase Swimlanes ══════════ */
+  .phase-spectrum {
+    display: flex;
+    gap: 1px;
+    margin: 0 28px 16px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  .phase-spectrum a {
+    flex: 1;
+    text-decoration: none;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: filter .15s ease;
+  }
+  .phase-spectrum a:hover { filter: brightness(0.96); }
+  .phase-spectrum .n { font-size: 15px; font-weight: 700; }
+
+  #variant-b .phase-columns {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(240px, 1fr));
+    gap: 16px;
+    padding: 0 28px 28px;
+    align-items: start;
+  }
+  .phase-col-head {
+    padding: 10px 14px;
+    border-radius: 10px 10px 0 0;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+  .phase-col-body {
+    background: var(--surface-sunken);
+    border-radius: 0 0 10px 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 200px;
+  }
+  .stage-group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0 2px;
+  }
+  .stage-group-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+
+  /* ══════════ Variant C — Audit Ledger ══════════ */
+  #variant-c .ledger-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px 14px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .board-toggle {
+    display: flex;
+    gap: 4px;
+    background: var(--surface-sunken);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .board-toggle button {
+    border: none;
+    background: transparent;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-dim);
+    padding: 6px 12px;
+    border-radius: 6px;
+  }
+  .board-toggle button.is-active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-card); }
+
+  .ledger-wrap { padding: 0 28px 28px; overflow-x: auto; }
+  table.ledger { border-collapse: collapse; width: 100%; min-width: 920px; background: var(--surface); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-card); }
+  table.ledger th, table.ledger td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+  table.ledger thead th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    background: var(--surface-sunken);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  table.ledger thead th:hover { color: var(--ink); }
+  table.ledger thead th .caret { opacity: 0.4; margin-left: 3px; }
+  table.ledger thead th.is-sorted .caret { opacity: 1; color: var(--accent); }
+  table.ledger tbody tr { cursor: pointer; transition: background-color .1s ease; }
+  table.ledger tbody tr:hover { background: var(--accent-soft); }
+  table.ledger tbody tr:last-child td { border-bottom: none; }
+  .ledger-title { font-weight: 600; }
+  .mini-bar { width: 54px; height: 5px; border-radius: 3px; background: var(--muted-soft); overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px; }
+  .mini-bar > span { display: block; height: 100%; background: var(--accent); }
+
+  #c-board .lanes { min-height: 0; }
+  #c-board .lane { min-height: 420px; }
+
+  /* ══════════ Modal ══════════ */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(20, 24, 31, 0.45);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 5vh 20px;
+    overflow-y: auto;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity .15s ease;
+  }
+  .modal-overlay.is-open { opacity: 1; }
+  .modal-overlay[hidden] { display: none; }
+  .modal {
+    background: var(--surface);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 640px;
+    box-shadow: var(--shadow-modal);
+    transform: translateY(8px) scale(0.98);
+    transition: transform .15s ease;
+  }
+  .modal-overlay.is-open .modal { transform: translateY(0) scale(1); }
+  .modal-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 20px 24px 0; }
+  .modal-id { font-size: 11.5px; color: var(--ink-faint); font-weight: 700; }
+  .modal-title { font-size: 18px; font-weight: 700; margin: 4px 0 0; max-width: 46ch; }
+  .modal-close { border: none; background: var(--surface-sunken); color: var(--ink-dim); width: 30px; height: 30px; border-radius: 8px; font-size: 15px; flex-shrink: 0; }
+  .modal-close:hover { color: var(--ink); }
+  .modal-meta {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 12px 24px 0;
+  }
+  .modal-body { padding: 18px 24px 24px; display: flex; flex-direction: column; gap: 20px; }
+  .modal-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); margin-bottom: 8px; display: block; }
+  .check-list { display: flex; flex-direction: column; gap: 6px; }
+  .check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .check-dot {
+    width: 16px; height: 16px; border-radius: 5px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff;
+    background: var(--line-strong);
+  }
+  .check-row.is-done .check-dot { background: var(--good); }
+  .check-row.is-done span.check-text { color: var(--ink-dim); text-decoration: line-through; text-decoration-color: var(--line-strong); }
+  .gate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .gate-chip {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .gate-chip .gname { font-weight: 700; }
+  .gate-chip .gstatus { font-size: 11px; }
+  .gate-chip.approved { border-color: var(--good); background: var(--good-soft); }
+  .gate-chip.approved .gstatus { color: var(--good); }
+  .gate-chip.pending .gstatus { color: var(--ink-faint); }
+  .link-list { display: flex; flex-direction: column; gap: 5px; }
+  .link-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .link-row .ldot { width: 6px; height: 6px; border-radius: 50%; background: var(--line-strong); flex-shrink: 0; }
+  .link-row.has-link .ldot { background: var(--accent); }
+  .link-row.has-link a { color: var(--accent); text-decoration: none; }
+  .link-row.has-link a:hover { text-decoration: underline; }
+  .link-row:not(.has-link) { color: var(--ink-faint); }
+  .evidence-cmd { font-family: var(--font-mono); font-size: 12px; background: var(--surface-sunken); padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; overflow-x: auto; }
+  .residual-risk { font-size: 13px; color: var(--ink-dim); background: var(--warn-soft); border-radius: 8px; padding: 10px 12px; }
+  .comment { display: flex; gap: 10px; margin-bottom: 12px; }
+  .comment-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .comment-name { font-size: 12.5px; font-weight: 700; }
+  .comment-time { font-size: 11px; color: var(--ink-faint); font-weight: 400; margin-left: 6px; }
+  .comment-text { font-size: 13px; color: var(--ink-dim); margin-top: 2px; line-height: 1.5; }
+  .no-comment { font-size: 13px; color: var(--ink-faint); }
+
+  .choose-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 22px 28px 0; padding: 14px 18px;
+    background: var(--ink); color: #fff; border-radius: 12px;
+    font-size: 13px;
+  }
+  .choose-bar button {
+    background: #fff; color: var(--ink); border: none; border-radius: 8px;
+    padding: 8px 16px; font-weight: 700; font-size: 13px;
+  }
+  .choose-bar button:hover { background: var(--accent-soft); color: var(--accent); }
+
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px);
+    background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+    z-index: 200;
+  }
+  #toast.is-shown { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+
+<div class="topbar">
+  <div class="topbar-row1">
+    <div class="brand">
+      <span class="brand-name">治理看板</span>
+      <span class="brand-sub">ai/process/kanban.md 的視覺化 — 3 個版面方向，同一份資料</span>
+    </div>
+    <div class="variant-switch" role="tablist">
+      <button type="button" class="is-active" data-variant="a" role="tab"><span class="vlabel">A</span>控制塔（12 欄）</button>
+      <button type="button" data-variant="b" role="tab"><span class="vlabel">B</span>階段分組（5 欄）</button>
+      <button type="button" data-variant="c" role="tab"><span class="vlabel">C</span>稽核清單（表格）</button>
+    </div>
+  </div>
+  <div class="topbar-row2" id="stat-strip"></div>
+  <p class="variant-note" id="variant-note"></p>
+</div>
+
+<main>
+  <section id="variant-a" class="variant is-active">
+    <div class="lanes" id="lanes-a"></div>
+  </section>
+
+  <section id="variant-b" class="variant">
+    <div class="phase-spectrum" id="phase-spectrum"></div>
+    <div class="phase-columns" id="phase-columns"></div>
+  </section>
+
+  <section id="variant-c" class="variant">
+    <div class="ledger-toolbar">
+      <div class="board-toggle" id="c-toggle">
+        <button type="button" class="is-active" data-ctoggle="table">清單</button>
+        <button type="button" data-ctoggle="board">看板</button>
+      </div>
+    </div>
+    <div class="ledger-wrap" id="c-table"></div>
+    <div id="c-board" style="display:none;">
+      <div class="lanes" id="lanes-c"></div>
+    </div>
+  </section>
+
+  <div class="choose-bar" id="choose-bar">
+    <span id="choose-label">正在檢視：<strong>A · 控制塔</strong></span>
+    <button type="button" id="choose-btn">選這個版本</button>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-overlay" hidden>
+  <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STAGES = [
+    { id: "inbox",   label: "Inbox",        phase: 0 },
+    { id: "clarify", label: "待釐清",        phase: 0 },
+    { id: "product", label: "待產品核准",     phase: 0 },
+    { id: "mockup",  label: "待 UI Mockup",  phase: 1 },
+    { id: "arch",    label: "待架構規劃",     phase: 1 },
+    { id: "cards",   label: "待任務卡",       phase: 1 },
+    { id: "ready",   label: "AI 就緒",       phase: 2 },
+    { id: "working", label: "Agent 執行中",  phase: 2 },
+    { id: "verify",  label: "待驗證",        phase: 3 },
+    { id: "review",  label: "待審查",        phase: 3 },
+    { id: "accept",  label: "待人工驗收",     phase: 4 },
+    { id: "done",    label: "完成",          phase: 4 }
+  ];
+
+  var PHASES = [
+    { label: "規劃",     tint: "#eef0f4", text: "#4b5566" },
+    { label: "設計",     tint: "#efebfa", text: "#6b46c1" },
+    { label: "執行",     tint: "#eaeefc", text: "#3446d6" },
+    { label: "驗證審查", tint: "#e7f5f2", text: "#147d6f" },
+    { label: "驗收",     tint: "#e9f7ee", text: "#1f9d6b" }
+  ];
+
+  var WIP_CAPS = { working: 3, review: 5, accept: 5 };
+
+  var READINESS_ITEMS = [
+    "問題已釐清", "非目標已釐清", "驗收標準可測試", "相關檔案或搜尋入口已知",
+    "允許範圍已界定", "驗證契約存在", "人工核准已記錄（如需要）"
+  ];
+  var GATE_ITEMS = ["產品", "UI", "架構", "安全", "測試", "Code Review"];
+
+  function stageIndex(id) { for (var i = 0; i < STAGES.length; i++) if (STAGES[i].id === id) return i; return -1; }
+
+  var TICKETS = [
+    t("GOV-001", "翻譯 CLAUDE.md / AGENTS.md 為繁體中文", "done", "low", "Claude Code", false, 7, 6,
+      { tc: true, vr: true, pr: true }),
+    t("GOV-002", "統一 .claude 與 .codex 的 skills（symlink → thin stub）", "done", "medium", "Claude Code", true, 7, 6,
+      { tc: true, vr: true, pr: true }),
+    t("GOV-003", "補齊 implementation-plan / ui-mockup-gate 到 Codex", "done", "low", "Claude Code", false, 7, 6,
+      { tc: true, vr: true, pr: true }),
+    t("GOV-004", "治理看板 UI：三個 mockup 變體待選", "mockup", "medium", "Claude Code", true, 4, 1,
+      { ss: true, md: true },
+      { comments: [
+        { name: "Claude Code", time: "07-03 13:58", text: "三個版本用同一份資料，只有版面配置不同，方便直接比較。" },
+        { name: "PJ", time: "07-03 14:02", text: "先看三個方向，我晚點選一個。" }
+      ] }),
+    t("GOV-005", "看板 server 端 API 設計（比照 Harmoni server.mjs）", "arch", "medium", "Claude Code", false, 4, 0, {}),
+    t("GOV-006", "看板拖曳排序寫回 JSON：拆成任務卡", "cards", "low", "Claude Code", false, 5, 0, { tc: true }),
+    t("GOV-007", "看板 Dashboard 視圖：WIP 超標警示", "ready", "low", "Claude Code", false, 6, 0, { tc: true }),
+    t("GOV-008", "看板卡片 modal：Readiness / Gates checklist", "working", "medium", "Claude Code", false, 6, 0, { tc: true }),
+    t("GOV-009", "看板 lane 內排序與鍵盤操作", "working", "low", "Claude Code", false, 6, 0, { tc: true }),
+    t("GOV-010", "四個共用 skill 合併後的行為驗證", "verify", "low", "Claude Code", false, 6, 2,
+      { tc: true, vr: true },
+      { evidence: {
+          commands: ["pnpm test -- skills.spec.ts", "diff .claude/skills/security-maintainability-review/SKILL.md .codex/skills/security-maintainability-review/SKILL.md"],
+          findings: ["合併後 description 已同時涵蓋原 code-review 範疇"],
+          residual: "尚未在實際 Codex CLI 環境跑過一次真的 $security-maintainability-review 呼叫。"
+        } }),
+    t("GOV-011", ".codex 與 .claude skill 內容一致性檢查", "verify", "low", "Claude Code", false, 6, 2, { tc: true, vr: true }),
+    t("GOV-012", ".claude/CLAUDE.md 匯入 AGENTS.md 的安全性審查", "review", "high", "Claude Code", true, 7, 3,
+      { tc: true, vr: true, pr: true },
+      { comments: [ { name: "PJ", time: "07-02 09:10", text: "@AGENTS.md 匯入語法要在 Windows 上額外測過再核准。" } ],
+        evidence: { commands: ["grep -rn \"@AGENTS.md\" ."], findings: ["import 語法僅在檔案開頭生效，已確認"], residual: "尚未驗證 Windows 無開發者模式時的降級行為。" } }),
+    t("GOV-013", "AGENTS.md 中文化後的一致性審查", "review", "low", "Claude Code", false, 7, 5, { tc: true, vr: true, pr: true }),
+    t("GOV-014", "security-maintainability-review 合併範疇審查", "review", "medium", "Claude Code", false, 7, 4, { tc: true, vr: true, pr: true }),
+    t("GOV-015", "ai/skills 正本內容審查", "review", "low", "Claude Code", false, 7, 5, { tc: true, vr: true, pr: true }),
+    t("GOV-016", "6 個 SKILL.md 繁體中文化審查", "review", "low", "Claude Code", false, 7, 6, { tc: true, vr: true, pr: true }),
+    t("GOV-017", "Windows symlink fallback 文件審查", "review", "medium", "Claude Code", false, 7, 3, { tc: true, vr: true, pr: true }),
+    t("GOV-018", "AGENTS.md / CLAUDE.md 繁體中文化人工驗收", "accept", "low", "", true, 7, 6, { tc: true, vr: true, pr: true }),
+    t("GOV-019", "產品核准：看板要不要開放給協作者唯讀連結", "product", "medium", "", true, 2, 0, { fs: true }),
+    t("GOV-020", "釐清：看板是否要支援多專案或只服務本 repo", "clarify", "low", "", false, 1, 0, {}),
+    t("GOV-021", "把治理看板本身的維運流程寫回 ai/context", "inbox", "low", "", false, 0, 0, {})
+  ];
+
+  function t(id, title, stage, risk, agent, approvalRequired, readinessDone, gatesApproved, links, extra) {
+    var o = {
+      id: id, title: title, stage: stage, risk: risk, owner: "PJ", agent: agent || "",
+      approvalRequired: !!approvalRequired, readinessDone: readinessDone, gatesApproved: gatesApproved,
+      links: links || {}, comments: [], evidence: null
+    };
+    if (extra) { if (extra.comments) o.comments = extra.comments; if (extra.evidence) o.evidence = extra.evidence; }
+    return o;
+  }
+
+  var LINK_LABELS = { fs: "功能規格", ss: "畫面規格", md: "Mockup 決策", tc: "任務卡", vr: "驗證報告", pr: "PR / commit" };
+  var LINK_KEYS = ["fs", "ss", "md", "tc", "vr", "pr"];
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function riskLabel(r) { return { low: "低風險", medium: "中風險", high: "高風險" }[r] || r; }
+
+  function ticketsByStage(id) { return TICKETS.filter(function (x) { return x.stage === id; }); }
+
+  function cardHtml(tk) {
+    var badges = '<span class="pill risk-' + tk.risk + '">' + riskLabel(tk.risk) + "</span>";
+    if (tk.agent) badges += '<span class="pill agent-pill">' + escapeHtml(tk.agent) + "</span>";
+    if (tk.approvalRequired) badges += '<span class="pill approval-pill">需人工核准</span>';
+    return (
+      '<button type="button" class="ticket-card risk-stripe-' + tk.risk + '" data-open="' + tk.id + '">' +
+      '<div class="ticket-id mono">' + tk.id + "</div>" +
+      '<div class="ticket-title">' + escapeHtml(tk.title) + "</div>" +
+      '<div class="ticket-badges">' + badges + "</div>" +
+      '<div class="ticket-meta-row"><span>' + escapeHtml(tk.owner) + "</span>" +
+      '<span class="progress-frac tabular">✓ ' + tk.readinessDone + "/7</span></div>" +
+      "</button>"
+    );
+  }
+
+  function laneHtml(stage) {
+    var items = ticketsByStage(stage.id);
+    var cap = WIP_CAPS[stage.id];
+    var over = cap && items.length > cap;
+    var phase = PHASES[stage.phase];
+    var gauge = cap ? items.length + " / " + cap : String(items.length);
+    var body = items.length
+      ? items.map(cardHtml).join("")
+      : '<div class="lane-empty">— 沒有卡片 —</div>';
+    return (
+      '<div class="lane">' +
+      '<div class="lane-head">' +
+      '<div class="lane-phase" style="color:' + phase.text + '">' + phase.label + "</div>" +
+      '<div class="lane-title-row"><span class="lane-title">' + stage.label + "</span>" +
+      '<span class="lane-gauge tabular' + (over ? " is-over" : "") + '">' + gauge + "</span>" +
+      "</div></div>" +
+      '<div class="lane-body">' + body + "</div>" +
+      "</div>"
+    );
+  }
+
+  function renderLanes(containerId) {
+    document.getElementById(containerId).innerHTML = STAGES.map(laneHtml).join("");
+  }
+
+  function renderPhaseSpectrum() {
+    var html = PHASES.map(function (p, i) {
+      var count = TICKETS.filter(function (x) { return STAGES[stageIndex(x.stage)].phase === i; }).length;
+      return '<a href="#phase-col-' + i + '" style="background:' + p.tint + ";color:" + p.text + '">' +
+        "<span>" + p.label + '</span><span class="n tabular">' + count + "</span></a>";
+    }).join("");
+    document.getElementById("phase-spectrum").innerHTML = html;
+  }
+
+  function renderPhaseColumns() {
+    var html = PHASES.map(function (p, i) {
+      var stagesInPhase = STAGES.filter(function (s) { return s.phase === i; });
+      var groups = stagesInPhase.map(function (s) {
+        var items = ticketsByStage(s.id);
+        var cards = items.length ? items.map(cardHtml).join("") : '<div class="lane-empty">— 沒有卡片 —</div>';
+        return (
+          '<div class="stage-group">' +
+          '<div class="stage-group-head"><span>' + s.label + '</span><span class="tabular">' + items.length + "</span></div>" +
+          '<div class="stage-group-cards">' + cards + "</div>" +
+          "</div>"
+        );
+      }).join("");
+      return (
+        '<div class="phase-col" id="phase-col-' + i + '">' +
+        '<div class="phase-col-head" style="background:' + p.tint + ";color:" + p.text + '">' + p.label + "</div>" +
+        '<div class="phase-col-body">' + groups + "</div>" +
+        "</div>"
+      );
+    }).join("");
+    document.getElementById("phase-columns").innerHTML = html;
+  }
+
+  var ledgerSort = { key: "stage", dir: 1 };
+  var LEDGER_COLS = [
+    { key: "id", label: "編號" },
+    { key: "title", label: "標題" },
+    { key: "stage", label: "階段" },
+    { key: "risk", label: "風險" },
+    { key: "owner", label: "Owner / Agent" },
+    { key: "approvalRequired", label: "需核准" },
+    { key: "readinessDone", label: "Readiness" },
+    { key: "gatesApproved", label: "Gates" }
+  ];
+  var RISK_ORDER = { low: 0, medium: 1, high: 2 };
+
+  function sortedTickets() {
+    var list = TICKETS.slice();
+    var key = ledgerSort.key, dir = ledgerSort.dir;
+    list.sort(function (a, b) {
+      var av, bv;
+      if (key === "stage") { av = stageIndex(a.stage); bv = stageIndex(b.stage); }
+      else if (key === "risk") { av = RISK_ORDER[a.risk]; bv = RISK_ORDER[b.risk]; }
+      else if (key === "approvalRequired") { av = a.approvalRequired ? 1 : 0; bv = b.approvalRequired ? 1 : 0; }
+      else { av = a[key]; bv = b[key]; }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return a.id.localeCompare(b.id);
+    });
+    return list;
+  }
+
+  function renderLedger() {
+    var head = LEDGER_COLS.map(function (c) {
+      var sorted = ledgerSort.key === c.key;
+      var caret = sorted ? (ledgerSort.dir === 1 ? "▲" : "▼") : "▲";
+      return '<th data-sort="' + c.key + '" class="' + (sorted ? "is-sorted" : "") + '">' + c.label +
+        '<span class="caret">' + caret + "</span></th>";
+    }).join("");
+
+    var rows = sortedTickets().map(function (tk) {
+      var stage = STAGES[stageIndex(tk.stage)];
+      var phase = PHASES[stage.phase];
+      return (
+        "<tr data-open=\"" + tk.id + "\">" +
+        '<td class="mono">' + tk.id + "</td>" +
+        '<td class="ledger-title">' + escapeHtml(tk.title) + "</td>" +
+        '<td><span class="pill" style="background:' + phase.tint + ";color:" + phase.text + '">' + stage.label + "</span></td>" +
+        '<td><span class="pill risk-' + tk.risk + '">' + riskLabel(tk.risk) + "</span></td>" +
+        "<td>" + escapeHtml(tk.owner) + (tk.agent ? " · " + escapeHtml(tk.agent) : "") + "</td>" +
+        "<td>" + (tk.approvalRequired ? "是" : "—") + "</td>" +
+        '<td class="tabular"><span class="mini-bar"><span style="width:' + (tk.readinessDone / 7 * 100) + '%"></span></span>' + tk.readinessDone + "/7</td>" +
+        '<td class="tabular"><span class="mini-bar"><span style="width:' + (tk.gatesApproved / 6 * 100) + '%"></span></span>' + tk.gatesApproved + "/6</td>" +
+        "</tr>"
+      );
+    }).join("");
+
+    document.getElementById("c-table").innerHTML =
+      '<table class="ledger"><thead><tr>' + head + "</tr></thead><tbody>" + rows + "</tbody></table>";
+  }
+
+  function renderStats() {
+    var total = TICKETS.length;
+    var overCaps = Object.keys(WIP_CAPS).filter(function (s) { return ticketsByStage(s).length > WIP_CAPS[s]; });
+    var needsApproval = TICKETS.filter(function (x) { return x.approvalRequired && x.stage !== "done"; }).length;
+    var withAgent = TICKETS.filter(function (x) { return x.agent && x.stage !== "done"; }).length;
+    var html =
+      '<div class="stat-chip"><strong class="tabular">' + total + '</strong>張卡片</div>' +
+      '<div class="stat-chip' + (overCaps.length ? " is-crit" : "") + '"><strong class="tabular">' + overCaps.length + "</strong>條車道超過 WIP 上限</div>" +
+      '<div class="stat-chip"><strong class="tabular">' + needsApproval + "</strong>張待人工核准</div>" +
+      '<div class="stat-chip is-accent"><strong class="tabular">' + withAgent + "</strong>張 agent 進行中</div>";
+    document.getElementById("stat-strip").innerHTML = html;
+  }
+
+  var NOTES = {
+    a: "水平 12 條車道，逐一對應 ai/process/kanban.md 的每個欄位。優點：階段顆粒度最完整、一眼看出瓶頸在哪一欄；缺點：需要左右捲動。",
+    b: "把 12 個欄位收成 5 個階段群組（規劃／設計／執行／驗證審查／驗收），同群組內用子群組堆疊。優點：不用橫向捲動、資訊密度較低；缺點：同一階段群組內的卡片仍需展開才看得出細部欄位。",
+    c: "預設是可排序的稽核清單表格，點右上角可切成看板。優點：一眼比較多張卡片的 Readiness／Gates 進度、適合審查密集的情境；缺點：不像看板一樣直覺呈現「拖曳搬移」的空間感。"
+  };
+
+  function switchVariant(v) {
+    document.querySelectorAll(".variant").forEach(function (el) { el.classList.remove("is-active"); });
+    document.getElementById("variant-" + v).classList.add("is-active");
+    document.querySelectorAll(".variant-switch button").forEach(function (b) {
+      b.classList.toggle("is-active", b.dataset.variant === v);
+    });
+    var names = { a: "A · 控制塔", b: "B · 階段分組", c: "C · 稽核清單" };
+    document.getElementById("choose-label").innerHTML = "正在檢視：<strong>" + names[v] + "</strong>";
+    document.getElementById("variant-note").textContent = NOTES[v];
+    currentVariant = v;
+  }
+
+  var currentVariant = "a";
+
+  function openModal(id) {
+    var tk = TICKETS.filter(function (x) { return x.id === id; })[0];
+    if (!tk) return;
+    var stage = STAGES[stageIndex(tk.stage)];
+    var phase = PHASES[stage.phase];
+
+    var badges = '<span class="pill" style="background:' + phase.tint + ";color:" + phase.text + '">' + stage.label + "</span>" +
+      '<span class="pill risk-' + tk.risk + '">' + riskLabel(tk.risk) + "</span>";
+    if (tk.agent) badges += '<span class="pill agent-pill">' + escapeHtml(tk.agent) + "</span>";
+    if (tk.approvalRequired) badges += '<span class="pill approval-pill">需人工核准</span>';
+
+    var readiness = READINESS_ITEMS.map(function (label, i) {
+      var done = i < tk.readinessDone;
+      return '<div class="check-row' + (done ? " is-done" : "") + '"><span class="check-dot">' + (done ? "✓" : "") + '</span><span class="check-text">' + label + "</span></div>";
+    }).join("");
+
+    var gates = GATE_ITEMS.map(function (label, i) {
+      var approved = i < tk.gatesApproved;
+      return '<div class="gate-chip ' + (approved ? "approved" : "pending") + '"><span class="gname">' + label + '</span><span class="gstatus">' + (approved ? "已核准" : "待審查") + "</span></div>";
+    }).join("");
+
+    var links = LINK_KEYS.map(function (k) {
+      var has = !!tk.links[k];
+      return '<div class="link-row' + (has ? " has-link" : "") + '"><span class="ldot"></span>' +
+        (has ? '<a href="#">' + LINK_LABELS[k] + "</a>" : "<span>" + LINK_LABELS[k] + "（尚未產出）</span>") + "</div>";
+    }).join("");
+
+    var evidenceHtml = "";
+    if (tk.evidence) {
+      evidenceHtml =
+        '<div><span class="modal-section-label">驗證證據</span>' +
+        tk.evidence.commands.map(function (c) { return '<div class="evidence-cmd mono">$ ' + escapeHtml(c) + "</div>"; }).join("") +
+        (tk.evidence.findings.length ? '<ul style="margin:8px 0 0 18px; font-size:13px; color:var(--ink-dim);">' + tk.evidence.findings.map(function (f) { return "<li>" + escapeHtml(f) + "</li>"; }).join("") + "</ul>" : "") +
+        (tk.evidence.residual ? '<div class="residual-risk" style="margin-top:8px;">殘留風險：' + escapeHtml(tk.evidence.residual) + "</div>" : "") +
+        "</div>";
+    }
+
+    var commentsHtml = tk.comments.length
+      ? tk.comments.map(function (c) {
+          var initial = c.name ? c.name.charAt(0).toUpperCase() : "?";
+          return '<div class="comment"><div class="comment-avatar">' + initial + '</div><div><span class="comment-name">' + escapeHtml(c.name) +
+            '</span><span class="comment-time">' + c.time + '</span><div class="comment-text">' + escapeHtml(c.text) + "</div></div></div>";
+        }).join("")
+      : '<p class="no-comment">尚無留言。</p>';
+
+    document.getElementById("modal").innerHTML =
+      '<div class="modal-head"><div><div class="modal-id mono">' + tk.id + '</div><h3 class="modal-title">' + escapeHtml(tk.title) + '</h3></div>' +
+      '<button type="button" class="modal-close" id="modal-close-btn">✕</button></div>' +
+      '<div class="modal-meta">' + badges + "</div>" +
+      '<div class="modal-body">' +
+      '<div><span class="modal-section-label">Readiness（' + tk.readinessDone + "/7）</span><div class=\"check-list\">" + readiness + "</div></div>" +
+      '<div><span class="modal-section-label">Review Gates（' + tk.gatesApproved + "/6）</span><div class=\"gate-grid\">" + gates + "</div></div>" +
+      '<div><span class="modal-section-label">關聯文件</span><div class="link-list">' + links + "</div></div>" +
+      evidenceHtml +
+      '<div><span class="modal-section-label">留言</span>' + commentsHtml + "</div>" +
+      "</div>";
+
+    var overlay = document.getElementById("modal-overlay");
+    overlay.hidden = false;
+    requestAnimationFrame(function () { overlay.classList.add("is-open"); });
+    document.getElementById("modal-close-btn").addEventListener("click", closeModal);
+  }
+
+  function closeModal() {
+    var overlay = document.getElementById("modal-overlay");
+    overlay.classList.remove("is-open");
+    setTimeout(function () { overlay.hidden = true; }, 150);
+  }
+
+  function showToast(msg) {
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("is-shown");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () { el.classList.remove("is-shown"); }, 2600);
+  }
+
+  document.addEventListener("click", function (e) {
+    var openTarget = e.target.closest("[data-open]");
+    if (openTarget) { openModal(openTarget.dataset.open); return; }
+
+    var variantBtn = e.target.closest(".variant-switch button");
+    if (variantBtn) { switchVariant(variantBtn.dataset.variant); return; }
+
+    var ctoggleBtn = e.target.closest("#c-toggle button");
+    if (ctoggleBtn) {
+      var mode = ctoggleBtn.dataset.ctoggle;
+      document.querySelectorAll("#c-toggle button").forEach(function (b) { b.classList.toggle("is-active", b === ctoggleBtn); });
+      document.getElementById("c-table").style.display = mode === "table" ? "" : "none";
+      document.getElementById("c-board").style.display = mode === "board" ? "" : "none";
+      return;
+    }
+
+    var sortTh = e.target.closest("table.ledger th[data-sort]");
+    if (sortTh) {
+      var key = sortTh.dataset.sort;
+      if (ledgerSort.key === key) ledgerSort.dir *= -1; else { ledgerSort.key = key; ledgerSort.dir = 1; }
+      renderLedger();
+      return;
+    }
+
+    if (e.target === document.getElementById("modal-overlay")) { closeModal(); return; }
+
+    if (e.target.id === "choose-btn") {
+      var names = { a: "A · 控制塔", b: "B · 階段分組", c: "C · 稽核清單" };
+      showToast("已記錄你的選擇：" + names[currentVariant] + " — 回到對話跟 Claude 說一聲，我會寫進 mockup-decision.md");
+      return;
+    }
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeModal();
+  });
+
+  renderStats();
+  renderLanes("lanes-a");
+  renderPhaseSpectrum();
+  renderPhaseColumns();
+  renderLedger();
+  renderLanes("lanes-c");
+  switchVariant("a");
+})();
+</script>

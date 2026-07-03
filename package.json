@@ -1,0 +1,8 @@
+{
+  "name": "ai-coding-governance-kit",
+  "private": true,
+  "description": "A cloneable workflow layer for AI coding agents.",
+  "scripts": {
+    "kanban": "node tools/kanban/server.mjs"
+  }
+}

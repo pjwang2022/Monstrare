@@ -1,0 +1,762 @@
+<title>治理看板</title>
+<style>
+  :root {
+    --paper: #f5f6f8;
+    --surface: #ffffff;
+    --surface-sunken: #eef0f3;
+    --ink: #14181f;
+    --ink-dim: #5b6472;
+    --ink-faint: #8890a0;
+    --line: #dde1e7;
+    --line-strong: #c3c9d3;
+    --accent: #3446d6;
+    --accent-soft: #eaeefc;
+    --good: #1f9d6b;
+    --good-soft: #e4f5ee;
+    --warn: #c9860a;
+    --warn-soft: #fbf1de;
+    --crit: #d23b3b;
+    --crit-soft: #fbe8e8;
+    --muted: #6b7280;
+    --muted-soft: #eceef1;
+    --shadow-card: 0 1px 2px rgba(20, 24, 31, 0.06), 0 1px 1px rgba(20, 24, 31, 0.04);
+    --shadow-card-hover: 0 6px 20px rgba(20, 24, 31, 0.12);
+    --shadow-modal: 0 24px 64px rgba(20, 24, 31, 0.28);
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--paper);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 { text-wrap: balance; font-weight: 650; }
+  button, input, textarea, select { font-family: inherit; font-size: inherit; color: inherit; }
+  button { cursor: pointer; }
+  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 70, 214, 0.35);
+    border-radius: 6px;
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+  .mono { font-family: var(--font-mono); }
+
+  /* ── Top chrome ── */
+  .topbar { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line); }
+  .topbar-row1 { display: flex; align-items: baseline; justify-content: space-between; padding: 18px 28px 4px; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .brand-name { font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 12.5px; color: var(--ink-dim); }
+  .topbar-row2 { display: flex; align-items: center; gap: 10px; padding: 8px 28px 14px; flex-wrap: wrap; }
+  .stat-chip { display: flex; align-items: baseline; gap: 6px; background: var(--surface-sunken); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; color: var(--ink-dim); }
+  .stat-chip strong { font-size: 15px; color: var(--ink); font-weight: 700; }
+  .stat-chip.is-crit { background: var(--crit-soft); color: var(--crit); }
+  .stat-chip.is-crit strong { color: var(--crit); }
+  .stat-chip.is-accent strong { color: var(--accent); }
+  .refresh-note { margin-left: auto; font-size: 11.5px; color: var(--ink-faint); }
+
+  .view-tabs { display: flex; gap: 4px; background: var(--surface-sunken); border-radius: 10px; padding: 3px; }
+  .view-tabs button { border: none; background: transparent; color: var(--ink-dim); font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px; transition: background-color .15s ease, color .15s ease; }
+  .view-tabs button:hover { color: var(--ink); }
+  .view-tabs button.is-active { background: var(--ink); color: #fff; }
+  .view { display: none; }
+  .view.is-active { display: block; }
+
+  /* ── pills ── */
+  .pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .risk-low { background: var(--muted-soft); color: var(--muted); }
+  .risk-medium { background: var(--warn-soft); color: var(--warn); }
+  .risk-high { background: var(--crit-soft); color: var(--crit); }
+  .agent-pill { background: var(--accent-soft); color: var(--accent); }
+  .approval-pill { background: var(--surface); color: var(--ink-dim); border: 1px solid var(--line-strong); }
+  .risk-stripe-low::before { background: var(--muted); }
+  .risk-stripe-medium::before { background: var(--warn); }
+  .risk-stripe-high::before { background: var(--crit); }
+
+  /* ── card ── */
+  .ticket-card {
+    position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px 10px 14px; box-shadow: var(--shadow-card); cursor: grab;
+    transition: box-shadow .15s ease, transform .15s ease, opacity .15s ease;
+  }
+  .ticket-card::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; }
+  .ticket-card:hover { box-shadow: var(--shadow-card-hover); transform: translateY(-1px); }
+  .ticket-card.is-dragging { opacity: 0.4; }
+  .ticket-id { font-size: 10.5px; color: var(--ink-faint); font-weight: 600; letter-spacing: 0.02em; }
+  .ticket-title { font-size: 13px; font-weight: 600; line-height: 1.35; margin: 3px 0 8px; }
+  .ticket-badges { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+  .ticket-meta-row { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--ink-faint); }
+
+  @media (prefers-reduced-motion: reduce) { .ticket-card, .modal, .modal-overlay { transition: none !important; } }
+
+  /* ── lanes ── */
+  .lanes { display: flex; gap: 1px; background: var(--line); overflow-x: auto; scroll-snap-type: x proximity; border-top: 1px solid var(--line); }
+  .lane { flex: 0 0 232px; scroll-snap-align: start; background: var(--paper); min-height: calc(100vh - 156px); display: flex; flex-direction: column; }
+  .lane.is-drag-over { background: var(--accent-soft); }
+  .lane-head { position: sticky; top: 0; padding: 12px 12px 10px; border-bottom: 2px solid var(--line-strong); background: var(--paper); z-index: 1; }
+  .lane-title-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .lane-title { font-size: 13px; font-weight: 700; }
+  .lane-gauge { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: var(--surface-sunken); color: var(--ink-dim); flex-shrink: 0; }
+  .lane-gauge.is-over { background: var(--crit); color: #fff; }
+  .lane-body { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .lane-empty { font-size: 11.5px; color: var(--ink-faint); padding: 10px 2px; }
+  .lane-add-btn { border: 1px dashed var(--line-strong); background: transparent; color: var(--ink-faint); border-radius: 10px; padding: 8px; font-size: 12px; font-weight: 600; text-align: center; }
+  .lane-add-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+  .lane-add-form { display: flex; flex-direction: column; gap: 6px; }
+  .lane-add-form input { border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 9px; font-size: 12.5px; }
+  .lane-add-form .row { display: flex; gap: 6px; }
+  .lane-add-form button { border: none; border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700; }
+  .lane-add-form .save { background: var(--ink); color: #fff; flex: 1; }
+  .lane-add-form .cancel { background: var(--surface-sunken); color: var(--ink-dim); }
+
+  /* ── modal ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(20, 24, 31, 0.45); display: flex; align-items: flex-start; justify-content: center; padding: 5vh 20px; overflow-y: auto; z-index: 100; opacity: 0; transition: opacity .15s ease; }
+  .modal-overlay.is-open { opacity: 1; }
+  .modal-overlay[hidden] { display: none; }
+  .modal { background: var(--surface); border-radius: 16px; width: 100%; max-width: 640px; box-shadow: var(--shadow-modal); transform: translateY(8px) scale(0.98); transition: transform .15s ease; }
+  .modal-overlay.is-open .modal { transform: translateY(0) scale(1); }
+  .modal-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 20px 24px 0; gap: 12px; }
+  .modal-id { font-size: 11.5px; color: var(--ink-faint); font-weight: 700; }
+  .modal-title-input { font-size: 18px; font-weight: 700; margin: 4px 0 0; width: 100%; border: none; border-radius: 8px; padding: 4px 6px; margin-left: -6px; }
+  .modal-title-input:hover, .modal-title-input:focus { background: var(--surface-sunken); }
+  .modal-close { border: none; background: var(--surface-sunken); color: var(--ink-dim); width: 30px; height: 30px; border-radius: 8px; font-size: 15px; flex-shrink: 0; }
+  .modal-close:hover { color: var(--ink); }
+  .modal-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 24px 0; }
+  .meta-field { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink-dim); }
+  .meta-field select, .meta-field input[type="text"] { border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; font-size: 12px; background: var(--surface); }
+  .meta-field input[type="checkbox"] { width: 14px; height: 14px; }
+  .modal-body { padding: 18px 24px 24px; display: flex; flex-direction: column; gap: 20px; }
+  .modal-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); margin-bottom: 8px; display: block; }
+  .content-input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; resize: vertical; min-height: 56px; }
+  .check-list { display: flex; flex-direction: column; gap: 2px; }
+  .check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; border: none; background: transparent; text-align: left; padding: 4px 4px; border-radius: 6px; width: 100%; }
+  .check-row:hover { background: var(--surface-sunken); }
+  .check-dot { width: 16px; height: 16px; border-radius: 5px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; background: var(--line-strong); }
+  .check-row.is-done .check-dot { background: var(--good); }
+  .check-row.is-done span.check-text { color: var(--ink-dim); text-decoration: line-through; text-decoration-color: var(--line-strong); }
+  .gate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .gate-chip { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; display: flex; flex-direction: column; gap: 3px; background: transparent; text-align: left; }
+  .gate-chip .gname { font-weight: 700; }
+  .gate-chip .gstatus { font-size: 11px; }
+  .gate-chip.approved { border-color: var(--good); background: var(--good-soft); }
+  .gate-chip.approved .gstatus { color: var(--good); }
+  .gate-chip.pending .gstatus { color: var(--ink-faint); }
+  .link-grid { display: flex; flex-direction: column; gap: 6px; }
+  .link-row { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 8px; font-size: 12.5px; }
+  .link-row label { color: var(--ink-faint); font-size: 11.5px; }
+  .link-row input { border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font-size: 12px; background: var(--surface); }
+  .link-row input:not(:placeholder-shown) { border-color: var(--accent); background: var(--accent-soft); }
+  .refs-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .refs-list span { font-size: 11.5px; background: var(--surface-sunken); border-radius: 6px; padding: 3px 8px; }
+  .evidence-block textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; font-family: var(--font-mono); min-height: 56px; margin-bottom: 6px; }
+  .residual-input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; min-height: 44px; }
+  .evidence-save { margin-top: 8px; border: none; background: var(--ink); color: #fff; border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; }
+  .comment { display: flex; gap: 10px; margin-bottom: 12px; }
+  .comment-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .comment-name { font-size: 12.5px; font-weight: 700; }
+  .comment-time { font-size: 11px; color: var(--ink-faint); font-weight: 400; margin-left: 6px; }
+  .comment-text { font-size: 13px; color: var(--ink-dim); margin-top: 2px; line-height: 1.5; white-space: pre-wrap; }
+  .no-comment { font-size: 13px; color: var(--ink-faint); margin-bottom: 10px; }
+  .comment-form { display: flex; gap: 8px; align-items: flex-start; }
+  .comment-form textarea { flex: 1; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; min-height: 40px; resize: vertical; }
+  .comment-form button { border: none; background: var(--ink); color: #fff; border-radius: 8px; padding: 8px 14px; font-size: 12.5px; font-weight: 700; align-self: flex-start; }
+  .modal-footer { display: flex; justify-content: space-between; padding: 0 24px 22px; }
+  .danger-btn { border: 1px solid var(--crit-soft); background: var(--crit-soft); color: var(--crit); border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; }
+  .danger-btn:hover { background: var(--crit); color: #fff; }
+
+  /* ── roadmap ── */
+  .roadmap { padding: 20px 28px 40px; display: flex; flex-direction: column; gap: 20px; max-width: 1100px; }
+  .progress-bar { height: 6px; border-radius: 4px; background: var(--surface-sunken); overflow: hidden; }
+  .progress-bar > span { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+  .epic-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-card); }
+  .epic-head { padding: 16px 20px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .epic-title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .epic-name { font-size: 15.5px; font-weight: 700; }
+  .epic-frac { font-size: 13px; font-weight: 700; color: var(--accent); flex-shrink: 0; }
+  .epic-def { font-size: 12.5px; color: var(--ink-dim); line-height: 1.55; max-width: 80ch; }
+  .epic-body { padding: 4px 20px 18px; display: flex; flex-direction: column; gap: 16px; }
+  .story-block { border-top: 1px solid var(--line); padding-top: 14px; }
+  .story-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  .story-name { font-size: 13px; font-weight: 700; }
+  .story-frac { font-size: 11.5px; color: var(--ink-dim); font-weight: 700; flex-shrink: 0; }
+  .story-def { font-size: 12px; color: var(--ink-faint); margin-bottom: 8px; line-height: 1.5; }
+  .story-progress { margin-bottom: 10px; }
+  .story-tasks { display: flex; flex-direction: column; gap: 1px; }
+  .task-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 8px; font-size: 12.5px; cursor: pointer; border: none; background: transparent; width: 100%; text-align: left; }
+  .task-row:hover { background: var(--surface-sunken); }
+  .task-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .task-id { font-size: 10.5px; color: var(--ink-faint); flex-shrink: 0; width: 62px; }
+  .task-title { flex: 1; }
+  .task-title.is-done { color: var(--ink-dim); text-decoration: line-through; text-decoration-color: var(--line-strong); }
+  .no-tasks { font-size: 12px; color: var(--ink-faint); padding: 4px 8px; }
+
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; z-index: 200; }
+  #toast.is-shown { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.is-error { background: var(--crit); }
+</style>
+
+<div class="topbar">
+  <div class="topbar-row1">
+    <div class="brand">
+      <span class="brand-name">治理看板</span>
+      <span class="brand-sub">ai/process/kanban.md 的視覺化 — Variant A · 控制塔</span>
+    </div>
+    <div class="view-tabs" role="tablist">
+      <button type="button" class="is-active" data-view="board" role="tab">看板</button>
+      <button type="button" data-view="roadmap" role="tab">藍圖</button>
+    </div>
+  </div>
+  <div class="topbar-row2" id="stat-strip"></div>
+</div>
+
+<main>
+  <section id="view-board" class="view is-active">
+    <div class="lanes" id="lanes"></div>
+  </section>
+  <section id="view-roadmap" class="view">
+    <div class="roadmap" id="roadmap"></div>
+  </section>
+</main>
+
+<div class="modal-overlay" id="modal-overlay" hidden>
+  <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+  var COMMENT_AUTHOR = "PJ";
+
+  var STAGES = [
+    { id: "backlog",       label: "Backlog 待辦",      color: "#5b6472" },
+    { id: "blocked",       label: "Blocked",           color: "#d23b3b" },
+    { id: "ready",         label: "Ready 就緒",        color: "#147d6f" },
+    { id: "implementing",  label: "Implementing 進行中", color: "#3446d6" },
+    { id: "verify",        label: "Verify 驗證中",      color: "#6b46c1" },
+    { id: "done",          label: "Done 完成",         color: "#1f9d6b" }
+  ];
+  var WIP_CAPS = { implementing: 3, verify: 5 };
+  var READINESS_ITEMS = [
+    ["problem_clear", "問題已釐清"], ["non_goals_clear", "非目標已釐清"],
+    ["acceptance_testable", "驗收標準可測試"], ["files_known", "相關檔案或搜尋入口已知"],
+    ["scope_defined", "允許範圍已界定"], ["verification_contract", "驗證契約存在"],
+    ["human_approval_recorded", "人工核准已記錄（如需要）"]
+  ];
+  var GATE_ITEMS = [
+    ["product", "產品"], ["ui", "UI"], ["architecture", "架構"],
+    ["security", "安全"], ["test", "測試"], ["code_review", "Code Review"]
+  ];
+  var LINK_ITEMS = [
+    ["featureSpec", "功能規格"], ["screenSpec", "畫面規格"], ["mockupDecision", "Mockup 決策"],
+    ["taskCard", "任務卡"], ["verificationReport", "驗證報告"], ["pr", "PR / commit"]
+  ];
+
+  var TICKETS = [];
+  var EPICS = [];
+  var openId = null;
+  var currentView = "board";
+
+  function stageIndex(id) { for (var i = 0; i < STAGES.length; i++) if (STAGES[i].id === id) return i; return -1; }
+  function getTicket(id) { return TICKETS.filter(function (x) { return x.id === id; })[0]; }
+  function ticketsByStage(id) {
+    return TICKETS.filter(function (x) { return x.stage === id; }).sort(function (a, b) { return a.order - b.order; });
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function riskLabel(r) { return { low: "低風險", medium: "中風險", high: "高風險" }[r] || r; }
+
+  /* ── API ── */
+  function api(path, options) {
+    return fetch(path, options).then(function (res) {
+      if (!res.ok) return res.json().then(function (e) { throw new Error(e.error || res.statusText); });
+      return res.json();
+    });
+  }
+  function loadAll() {
+    return Promise.all([
+      api("/api/cards").then(function (list) { TICKETS = list; }),
+      api("/api/epics").then(function (data) { EPICS = data.epics || []; })
+    ]);
+  }
+  function saveOne(tk) {
+    return api("/api/cards/" + encodeURIComponent(tk.id), {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tk)
+    }).catch(function (err) { showToast("儲存失敗：" + err.message, true); throw err; });
+  }
+  function saveBulk(list) {
+    return api("/api/cards", {
+      method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(list)
+    }).catch(function (err) { showToast("儲存失敗：" + err.message, true); throw err; });
+  }
+  function createCard(input) {
+    return api("/api/cards", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(input)
+    }).catch(function (err) { showToast("新增失敗：" + err.message, true); throw err; });
+  }
+  function deleteCard(id) {
+    return api("/api/cards/" + encodeURIComponent(id), { method: "DELETE" })
+      .catch(function (err) { showToast("刪除失敗：" + err.message, true); throw err; });
+  }
+
+  /* ── render: lanes ── */
+  function cardHtml(tk) {
+    var badges = '<span class="pill risk-' + tk.risk + '">' + riskLabel(tk.risk) + "</span>";
+    if (tk.agent) badges += '<span class="pill agent-pill">' + escapeHtml(tk.agent) + "</span>";
+    if (tk.approvalRequired) badges += '<span class="pill approval-pill">需人工核准</span>';
+    var readinessDone = READINESS_ITEMS.filter(function (r) { return tk.readiness[r[0]]; }).length;
+    return (
+      '<div class="ticket-card risk-stripe-' + tk.risk + '" data-id="' + escapeHtml(tk.id) + '" draggable="true" tabindex="0">' +
+      '<div class="ticket-id mono">' + tk.id + "</div>" +
+      '<div class="ticket-title">' + escapeHtml(tk.title) + "</div>" +
+      '<div class="ticket-badges">' + badges + "</div>" +
+      '<div class="ticket-meta-row"><span>' + escapeHtml(tk.owner) + "</span>" +
+      '<span class="tabular">✓ ' + readinessDone + "/7</span></div>" +
+      "</div>"
+    );
+  }
+
+  function laneHtml(stage) {
+    var items = ticketsByStage(stage.id);
+    var cap = WIP_CAPS[stage.id];
+    var over = cap && items.length > cap;
+    var gauge = cap ? items.length + " / " + cap : String(items.length);
+    var body = items.length ? items.map(cardHtml).join("") : '<div class="lane-empty">— 沒有卡片 —</div>';
+    return (
+      '<div class="lane" data-stage="' + stage.id + '" style="border-top: 3px solid ' + stage.color + '">' +
+      '<div class="lane-head">' +
+      '<div class="lane-title-row"><span class="lane-title">' + stage.label + "</span>" +
+      '<span class="lane-gauge tabular' + (over ? " is-over" : "") + '">' + gauge + "</span>" +
+      "</div></div>" +
+      '<div class="lane-body" data-lane-body="' + stage.id + '">' + body +
+      '<button type="button" class="lane-add-btn" data-add-to="' + stage.id + '">+ 新增卡片</button>' +
+      "</div></div>"
+    );
+  }
+
+  function renderLanes() {
+    document.getElementById("lanes").innerHTML = STAGES.map(laneHtml).join("");
+  }
+
+  function renderStats() {
+    var total = TICKETS.length;
+    var overCaps = Object.keys(WIP_CAPS).filter(function (s) { return ticketsByStage(s).length > WIP_CAPS[s]; });
+    var needsApproval = TICKETS.filter(function (x) { return x.approvalRequired && x.stage !== "done"; }).length;
+    var withAgent = TICKETS.filter(function (x) { return x.agent && x.stage !== "done"; }).length;
+    document.getElementById("stat-strip").innerHTML =
+      '<div class="stat-chip"><strong class="tabular">' + total + '</strong>張卡片</div>' +
+      '<div class="stat-chip' + (overCaps.length ? " is-crit" : "") + '"><strong class="tabular">' + overCaps.length + "</strong>條車道超過 WIP 上限</div>" +
+      '<div class="stat-chip"><strong class="tabular">' + needsApproval + "</strong>張待人工核准</div>" +
+      '<div class="stat-chip is-accent"><strong class="tabular">' + withAgent + "</strong>張 agent 進行中</div>" +
+      '<span class="refresh-note">拖曳卡片可換車道／排序，點卡片看詳情</span>';
+  }
+
+  /* ── render: roadmap ── */
+  function pct(done, total) { return total ? Math.round((done / total) * 100) : 0; }
+
+  function taskRowHtml(tk) {
+    var stage = STAGES[stageIndex(tk.stage)];
+    var done = tk.stage === "done";
+    return (
+      '<button type="button" class="task-row" data-open="' + escapeHtml(tk.id) + '">' +
+      '<span class="task-dot" style="background:' + stage.color + '"></span>' +
+      '<span class="task-id mono">' + tk.id + "</span>" +
+      '<span class="task-title' + (done ? " is-done" : "") + '">' + escapeHtml(tk.title) + "</span>" +
+      '<span class="pill risk-' + tk.risk + '">' + riskLabel(tk.risk) + "</span>" +
+      "</button>"
+    );
+  }
+
+  function storyBlockHtml(epicName, story) {
+    var epicDef = EPICS.filter(function (e) { return e.name === epicName; })[0];
+    var knownStoryNames = epicDef ? epicDef.stories.map(function (s) { return s.name; }) : [];
+    var tasks = TICKETS.filter(function (t) {
+      if (t.epic !== epicName) return false;
+      return story.__orphan ? knownStoryNames.indexOf(t.userStory) === -1 : t.userStory === story.name;
+    });
+    var doneCount = tasks.filter(function (t) { return t.stage === "done"; }).length;
+    var body = tasks.length
+      ? '<div class="story-tasks">' + tasks.map(taskRowHtml).join("") + "</div>"
+      : '<p class="no-tasks">尚無任務卡。</p>';
+    return (
+      '<div class="story-block">' +
+      '<div class="story-head"><span class="story-name">' + escapeHtml(story.name) + "</span>" +
+      '<span class="story-frac tabular">' + doneCount + " / " + tasks.length + " 完成 · " + pct(doneCount, tasks.length) + "%</span></div>" +
+      '<p class="story-def">' + escapeHtml(story.definition || "") + "</p>" +
+      '<div class="progress-bar story-progress"><span style="width:' + pct(doneCount, tasks.length) + '%"></span></div>' +
+      body +
+      "</div>"
+    );
+  }
+
+  function epicCardHtml(epic) {
+    var tasks = TICKETS.filter(function (t) { return t.epic === epic.name; });
+    var doneCount = tasks.filter(function (t) { return t.stage === "done"; }).length;
+    var storyNames = (epic.stories || []).map(function (s) { return s.name; });
+    var stories = (epic.stories || []).map(function (s) { return storyBlockHtml(epic.name, s); }).join("");
+    var orphans = tasks.filter(function (t) { return storyNames.indexOf(t.userStory) === -1; });
+    if (orphans.length) {
+      stories += storyBlockHtml(epic.name, { name: "（未分類任務）", definition: "屬於這個 Epic，但還沒指定 User Story。", __orphan: true });
+    }
+    return (
+      '<div class="epic-card">' +
+      '<div class="epic-head">' +
+      '<div class="epic-title-row"><span class="epic-name">' + escapeHtml(epic.name) + "</span>" +
+      '<span class="epic-frac tabular">' + doneCount + " / " + tasks.length + " 完成 · " + pct(doneCount, tasks.length) + "%</span></div>" +
+      '<p class="epic-def">' + escapeHtml(epic.definition || "") + "</p>" +
+      '<div class="progress-bar"><span style="width:' + pct(doneCount, tasks.length) + '%"></span></div>' +
+      "</div>" +
+      '<div class="epic-body">' + stories + "</div>" +
+      "</div>"
+    );
+  }
+
+  function renderRoadmap() {
+    document.getElementById("roadmap").innerHTML = EPICS.length
+      ? EPICS.map(epicCardHtml).join("")
+      : '<p class="no-tasks">尚無 Epic。開始新專案時，先跟 Claude／Codex 說明這個專案要做什麼，' +
+        '走一遍 spec-interrogation → implementation-plan 流程，把功能模組（Epic）、用戶需求（User Story）' +
+        '寫進 <span class="mono">tools/kanban/epics.json</span>，任務卡再透過看板分頁的「+ 新增卡片」建立並指定 Epic / User Story。</p>';
+  }
+
+  function renderAll() { renderLanes(); renderStats(); renderRoadmap(); }
+
+  function switchView(v) {
+    currentView = v;
+    document.querySelectorAll(".view").forEach(function (el) { el.classList.remove("is-active"); });
+    document.getElementById("view-" + v).classList.add("is-active");
+    document.querySelectorAll(".view-tabs button").forEach(function (b) {
+      b.classList.toggle("is-active", b.dataset.view === v);
+    });
+  }
+
+  /* ── modal ── */
+  function openModal(id) {
+    openId = id;
+    var tk = getTicket(id);
+    if (!tk) return;
+    var stage = STAGES[stageIndex(tk.stage)];
+
+    var stageOptions = STAGES.map(function (s) {
+      return '<option value="' + s.id + '"' + (s.id === tk.stage ? " selected" : "") + ">" + s.label + "</option>";
+    }).join("");
+    var riskOptions = ["low", "medium", "high"].map(function (r) {
+      return '<option value="' + r + '"' + (r === tk.risk ? " selected" : "") + ">" + riskLabel(r) + "</option>";
+    }).join("");
+
+    var epicOptions = '<option value=""' + (tk.epic ? "" : " selected") + ">（未分類）</option>" +
+      EPICS.map(function (e) {
+        return '<option value="' + escapeHtml(e.name) + '"' + (e.name === tk.epic ? " selected" : "") + ">" + escapeHtml(e.name) + "</option>";
+      }).join("");
+    var currentEpic = EPICS.filter(function (e) { return e.name === tk.epic; })[0];
+    var storyOptions = '<option value=""' + (tk.userStory ? "" : " selected") + ">（未分類）</option>" +
+      (currentEpic ? currentEpic.stories.map(function (s) {
+        return '<option value="' + escapeHtml(s.name) + '"' + (s.name === tk.userStory ? " selected" : "") + ">" + escapeHtml(s.name) + "</option>";
+      }).join("") : "");
+
+    var readiness = READINESS_ITEMS.map(function (item) {
+      var done = !!tk.readiness[item[0]];
+      return '<button type="button" class="check-row' + (done ? " is-done" : "") + '" data-readiness="' + item[0] + '">' +
+        '<span class="check-dot">' + (done ? "✓" : "") + '</span><span class="check-text">' + item[1] + "</span></button>";
+    }).join("");
+
+    var gates = GATE_ITEMS.map(function (item) {
+      var approved = !!tk.gates[item[0]];
+      return '<button type="button" class="gate-chip ' + (approved ? "approved" : "pending") + '" data-gate="' + item[0] + '">' +
+        '<span class="gname">' + item[1] + '</span><span class="gstatus">' + (approved ? "已核准" : "待審查") + "</span></button>";
+    }).join("");
+
+    var links = LINK_ITEMS.map(function (item) {
+      return '<div class="link-row"><label>' + item[1] + '</label><input type="text" data-link="' + item[0] +
+        '" placeholder="尚未產出" value="' + escapeHtml(tk.links[item[0]] || "") + '"></div>';
+    }).join("");
+
+    var refs = tk.refs.length
+      ? '<div class="refs-list">' + tk.refs.map(function (r) { return "<span class=\"mono\">" + escapeHtml(r) + "</span>"; }).join("") + "</div>"
+      : '<p class="no-comment">尚無關聯檔案。</p>';
+
+    var ev = tk.evidence;
+    var evidenceHtml =
+      '<div class="evidence-block">' +
+      '<textarea data-ev="commands" placeholder="驗證指令，一行一個">' + escapeHtml(ev.commands.join("\n")) + "</textarea>" +
+      '<textarea data-ev="findings" placeholder="發現，一行一個">' + escapeHtml(ev.findings.join("\n")) + "</textarea>" +
+      '<textarea class="residual-input" data-ev="residual" placeholder="殘留風險">' + escapeHtml(ev.residual) + "</textarea>" +
+      '<button type="button" class="evidence-save" id="save-evidence">儲存驗證證據</button>' +
+      "</div>";
+
+    var commentsHtml = tk.comments.length
+      ? tk.comments.map(function (c) {
+          var initial = c.name ? c.name.charAt(0).toUpperCase() : "?";
+          return '<div class="comment"><div class="comment-avatar">' + initial + '</div><div><span class="comment-name">' + escapeHtml(c.name) +
+            '</span><span class="comment-time">' + escapeHtml(c.time) + '</span><div class="comment-text">' + escapeHtml(c.text) + "</div></div></div>";
+        }).join("")
+      : '<p class="no-comment">尚無留言。</p>';
+
+    document.getElementById("modal").innerHTML =
+      '<div class="modal-head"><div style="flex:1;"><div class="modal-id mono">' + tk.id + '</div>' +
+      '<input class="modal-title-input" id="field-title" value="' + escapeHtml(tk.title) + '"></div>' +
+      '<button type="button" class="modal-close" id="modal-close-btn">✕</button></div>' +
+      '<div class="modal-meta">' +
+      '<span class="meta-field">階段 <select id="field-stage">' + stageOptions + "</select></span>" +
+      '<span class="meta-field">風險 <select id="field-risk">' + riskOptions + "</select></span>" +
+      '<span class="meta-field">Owner <input type="text" id="field-owner" value="' + escapeHtml(tk.owner) + '"></span>' +
+      '<span class="meta-field">Agent <input type="text" id="field-agent" value="' + escapeHtml(tk.agent) + '"></span>' +
+      '<label class="meta-field"><input type="checkbox" id="field-approval"' + (tk.approvalRequired ? " checked" : "") + "> 需人工核准</label>" +
+      "</div>" +
+      '<div class="modal-meta">' +
+      '<span class="meta-field">Epic <select id="field-epic">' + epicOptions + "</select></span>" +
+      '<span class="meta-field">User Story <select id="field-story">' + storyOptions + "</select></span>" +
+      "</div>" +
+      '<div class="modal-body">' +
+      '<div><span class="modal-section-label">描述</span><textarea class="content-input" id="field-content" placeholder="補充說明…">' + escapeHtml(tk.content) + "</textarea></div>" +
+      '<div><span class="modal-section-label">Readiness</span><div class="check-list">' + readiness + "</div></div>" +
+      '<div><span class="modal-section-label">Review Gates</span><div class="gate-grid">' + gates + "</div></div>" +
+      '<div><span class="modal-section-label">關聯文件</span><div class="link-grid">' + links + "</div></div>" +
+      '<div><span class="modal-section-label">相關檔案</span>' + refs + "</div>" +
+      '<div><span class="modal-section-label">驗證證據</span>' + evidenceHtml + "</div>" +
+      '<div><span class="modal-section-label">留言</span>' + commentsHtml +
+      '<div class="comment-form"><textarea id="new-comment" placeholder="留個言…"></textarea><button type="button" id="add-comment">送出</button></div></div>' +
+      "</div>" +
+      '<div class="modal-footer"><button type="button" class="danger-btn" id="delete-card">刪除卡片</button><span></span></div>';
+
+    var overlay = document.getElementById("modal-overlay");
+    overlay.hidden = false;
+    requestAnimationFrame(function () { overlay.classList.add("is-open"); });
+  }
+
+  function closeModal() {
+    var overlay = document.getElementById("modal-overlay");
+    overlay.classList.remove("is-open");
+    setTimeout(function () { overlay.hidden = true; openId = null; }, 150);
+  }
+
+  function persistField(tk) {
+    saveOne(tk).then(function () { renderAll(); });
+  }
+
+  function showToast(msg, isError) {
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.toggle("is-error", !!isError);
+    el.classList.add("is-shown");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function () { el.classList.remove("is-shown"); }, 2600);
+  }
+
+  /* ── drag and drop ── */
+  var dragId = null;
+
+  function getDragAfterElement(container, y) {
+    var els = Array.prototype.slice.call(container.querySelectorAll(".ticket-card:not(.is-dragging)"));
+    var closest = { offset: -Infinity, element: null };
+    els.forEach(function (child) {
+      var box = child.getBoundingClientRect();
+      var offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) closest = { offset: offset, element: child };
+    });
+    return closest.element;
+  }
+
+  function commitDrop() {
+    var changed = [];
+    document.querySelectorAll(".lane").forEach(function (lane) {
+      var stageId = lane.dataset.stage;
+      var ids = Array.prototype.map.call(lane.querySelectorAll(".ticket-card"), function (el) { return el.dataset.id; });
+      ids.forEach(function (id, i) {
+        var tk = getTicket(id);
+        if (!tk) return;
+        var newOrder = i + 1;
+        if (tk.stage !== stageId || tk.order !== newOrder) {
+          tk.stage = stageId;
+          tk.order = newOrder;
+          changed.push(tk);
+        }
+      });
+    });
+    if (changed.length) {
+      saveBulk(changed).then(function () { renderStats(); }).catch(function () { loadAll().then(renderAll); });
+    }
+  }
+
+  /* ── events ── */
+  document.addEventListener("dragstart", function (e) {
+    var card = e.target.closest(".ticket-card");
+    if (!card) return;
+    dragId = card.dataset.id;
+    setTimeout(function () { card.classList.add("is-dragging"); }, 0);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", dragId);
+  });
+
+  document.addEventListener("dragend", function (e) {
+    var card = e.target.closest(".ticket-card");
+    if (card) card.classList.remove("is-dragging");
+    document.querySelectorAll(".lane.is-drag-over").forEach(function (l) { l.classList.remove("is-drag-over"); });
+  });
+
+  document.addEventListener("dragover", function (e) {
+    var lane = e.target.closest(".lane");
+    if (!lane || !dragId) return;
+    e.preventDefault();
+    document.querySelectorAll(".lane.is-drag-over").forEach(function (l) { if (l !== lane) l.classList.remove("is-drag-over"); });
+    lane.classList.add("is-drag-over");
+    var laneBody = lane.querySelector(".lane-body");
+    var dragging = laneBody.querySelector(".is-dragging") || document.querySelector('.ticket-card[data-id="' + dragId + '"]');
+    if (!dragging) return;
+    var afterEl = getDragAfterElement(laneBody, e.clientY);
+    var addBtn = laneBody.querySelector(".lane-add-btn");
+    if (afterEl == null) laneBody.insertBefore(dragging, addBtn);
+    else laneBody.insertBefore(dragging, afterEl);
+  });
+
+  document.addEventListener("drop", function (e) {
+    var lane = e.target.closest(".lane");
+    if (!lane) return;
+    e.preventDefault();
+    lane.classList.remove("is-drag-over");
+    dragId = null;
+    commitDrop();
+  });
+
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".ticket-card")) { openModal(e.target.closest(".ticket-card").dataset.id); return; }
+
+    var taskRow = e.target.closest(".task-row[data-open]");
+    if (taskRow) { openModal(taskRow.dataset.open); return; }
+
+    var viewTab = e.target.closest(".view-tabs button");
+    if (viewTab) { switchView(viewTab.dataset.view); return; }
+
+    var addBtn = e.target.closest("[data-add-to]");
+    if (addBtn) {
+      var stageId = addBtn.dataset.addTo;
+      var form = document.createElement("div");
+      form.className = "lane-add-form";
+      form.innerHTML = '<input type="text" placeholder="卡片標題…" autofocus><div class="row">' +
+        '<button type="button" class="save">新增</button><button type="button" class="cancel">取消</button></div>';
+      addBtn.replaceWith(form);
+      var input = form.querySelector("input");
+      input.focus();
+      function submit() {
+        var title = input.value.trim();
+        if (!title) return;
+        createCard({ title: title, stage: stageId }).then(function (card) {
+          TICKETS.push(card);
+          renderAll();
+        });
+      }
+      form.querySelector(".save").addEventListener("click", submit);
+      form.querySelector(".cancel").addEventListener("click", renderAll);
+      input.addEventListener("keydown", function (e) { if (e.key === "Enter") submit(); if (e.key === "Escape") renderAll(); });
+      return;
+    }
+
+    if (e.target === document.getElementById("modal-overlay")) { closeModal(); return; }
+    if (e.target.id === "modal-close-btn") { closeModal(); return; }
+
+    var readinessBtn = e.target.closest("[data-readiness]");
+    if (readinessBtn && openId) {
+      var tk1 = getTicket(openId);
+      var key = readinessBtn.dataset.readiness;
+      tk1.readiness[key] = !tk1.readiness[key];
+      saveOne(tk1).then(function () { openModal(openId); renderAll(); });
+      return;
+    }
+
+    var gateBtn = e.target.closest("[data-gate]");
+    if (gateBtn && openId) {
+      var tk2 = getTicket(openId);
+      var gkey = gateBtn.dataset.gate;
+      tk2.gates[gkey] = !tk2.gates[gkey];
+      saveOne(tk2).then(function () { openModal(openId); renderAll(); });
+      return;
+    }
+
+    if (e.target.id === "save-evidence" && openId) {
+      var tk3 = getTicket(openId);
+      var modalEl = document.getElementById("modal");
+      tk3.evidence.commands = modalEl.querySelector('[data-ev="commands"]').value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      tk3.evidence.findings = modalEl.querySelector('[data-ev="findings"]').value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      tk3.evidence.residual = modalEl.querySelector('[data-ev="residual"]').value.trim();
+      saveOne(tk3).then(function () { showToast("已儲存驗證證據"); });
+      return;
+    }
+
+    if (e.target.id === "add-comment" && openId) {
+      var tk4 = getTicket(openId);
+      var textarea = document.getElementById("new-comment");
+      var text = textarea.value.trim();
+      if (!text) return;
+      var now = new Date();
+      var pad = function (n) { return String(n).padStart(2, "0"); };
+      var time = pad(now.getMonth() + 1) + "-" + pad(now.getDate()) + " " + pad(now.getHours()) + ":" + pad(now.getMinutes());
+      tk4.comments.push({ name: COMMENT_AUTHOR, time: time, text: text });
+      saveOne(tk4).then(function () { openModal(openId); });
+      return;
+    }
+
+    if (e.target.id === "delete-card" && openId) {
+      if (!window.confirm("確定要刪除 " + openId + " 嗎？此動作無法復原。")) return;
+      var idToDelete = openId;
+      deleteCard(idToDelete).then(function () {
+        TICKETS = TICKETS.filter(function (x) { return x.id !== idToDelete; });
+        closeModal();
+        renderAll();
+      });
+      return;
+    }
+  });
+
+  document.addEventListener("change", function (e) {
+    if (!openId) return;
+    var tk = getTicket(openId);
+    if (e.target.id === "field-stage") {
+      tk.stage = e.target.value;
+      tk.order = ticketsByStage(tk.stage).length + 1;
+      persistField(tk);
+    } else if (e.target.id === "field-risk") {
+      tk.risk = e.target.value; persistField(tk);
+    } else if (e.target.id === "field-approval") {
+      tk.approvalRequired = e.target.checked; persistField(tk);
+    } else if (e.target.id === "field-epic") {
+      tk.epic = e.target.value; tk.userStory = "";
+      saveOne(tk).then(function () { renderAll(); openModal(openId); });
+    } else if (e.target.id === "field-story") {
+      tk.userStory = e.target.value; persistField(tk);
+    }
+  });
+
+  document.addEventListener("blur", function (e) {
+    if (!openId) return;
+    var tk = getTicket(openId);
+    if (e.target.id === "field-title" && e.target.value.trim() && e.target.value !== tk.title) {
+      tk.title = e.target.value.trim(); persistField(tk);
+    } else if (e.target.id === "field-owner" && e.target.value !== tk.owner) {
+      tk.owner = e.target.value; persistField(tk);
+    } else if (e.target.id === "field-agent" && e.target.value !== tk.agent) {
+      tk.agent = e.target.value; persistField(tk);
+    } else if (e.target.id === "field-content" && e.target.value !== tk.content) {
+      tk.content = e.target.value; persistField(tk);
+    } else if (e.target.matches("[data-link]")) {
+      var lk = e.target.dataset.link;
+      if (tk.links[lk] !== e.target.value) { tk.links[lk] = e.target.value; persistField(tk); }
+    }
+  }, true);
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !document.getElementById("modal-overlay").hidden) closeModal();
+  });
+
+  loadAll().then(renderAll).catch(function (err) { showToast("讀取失敗：" + err.message, true); });
+})();
+</script>

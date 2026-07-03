@@ -1,0 +1,56 @@
+name: AI-ready task
+description: Create a task that can move through the AI governance workflow.
+title: "[AI Task] "
+labels: ["ai-task", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What outcome should exist when this is done?
+    validations:
+      required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-goals
+      description: What should the agent avoid?
+    validations:
+      required: true
+  - type: textarea
+    id: screens
+    attributes:
+      label: Screens or flows
+      description: List affected screens, states, or user flows.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use testable bullet points.
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk level
+      options:
+        - low
+        - medium
+        - high
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification
+      description: Tests, build, lint, screenshots, security checks.
+    validations:
+      required: true
+

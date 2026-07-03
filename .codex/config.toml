@@ -1,0 +1,17 @@
+# Optional project-level Codex defaults.
+# Keep this file conservative. Users should adapt sandbox, model, and MCP
+# settings to their own environment.
+
+[model]
+# model = "gpt-5.4-codex"
+# reasoning_effort = "medium"
+
+[sandbox]
+# Keep writes scoped to the project unless the user explicitly expands access.
+mode = "workspace-write"
+
+[workflow]
+default_process = "ai/process/workflow.md"
+definition_of_ready = "ai/process/definition-of-ready.md"
+definition_of_done = "ai/process/definition-of-done.md"
+
