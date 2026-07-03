@@ -1,4 +1,4 @@
-<title>治理看板</title>
+<title>專案管理平台</title>
 <style>
   :root {
     --paper: #f5f6f8;
@@ -132,36 +132,17 @@
   .modal-title-input:hover, .modal-title-input:focus { background: var(--surface-sunken); }
   .modal-close { border: none; background: var(--surface-sunken); color: var(--ink-dim); width: 30px; height: 30px; border-radius: 8px; font-size: 15px; flex-shrink: 0; }
   .modal-close:hover { color: var(--ink); }
-  .modal-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 24px 0; }
-  .meta-field { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink-dim); }
-  .meta-field select, .meta-field input[type="text"] { border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; font-size: 12px; background: var(--surface); }
-  .meta-field input[type="checkbox"] { width: 14px; height: 14px; }
+  .modal-meta-static { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px 20px; padding: 14px 24px 0; }
+  .meta-item { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .meta-item-wide { grid-column: 1 / -1; }
+  .meta-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-faint); }
+  .meta-value { font-size: 13px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+  .stage-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .modal-body { padding: 18px 24px 24px; display: flex; flex-direction: column; gap: 20px; }
   .modal-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); margin-bottom: 8px; display: block; }
-  .content-input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; resize: vertical; min-height: 56px; }
-  .check-list { display: flex; flex-direction: column; gap: 2px; }
-  .check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; border: none; background: transparent; text-align: left; padding: 4px 4px; border-radius: 6px; width: 100%; }
-  .check-row:hover { background: var(--surface-sunken); }
-  .check-dot { width: 16px; height: 16px; border-radius: 5px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; background: var(--line-strong); }
-  .check-row.is-done .check-dot { background: var(--good); }
-  .check-row.is-done span.check-text { color: var(--ink-dim); text-decoration: line-through; text-decoration-color: var(--line-strong); }
-  .gate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .gate-chip { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; display: flex; flex-direction: column; gap: 3px; background: transparent; text-align: left; }
-  .gate-chip .gname { font-weight: 700; }
-  .gate-chip .gstatus { font-size: 11px; }
-  .gate-chip.approved { border-color: var(--good); background: var(--good-soft); }
-  .gate-chip.approved .gstatus { color: var(--good); }
-  .gate-chip.pending .gstatus { color: var(--ink-faint); }
-  .link-grid { display: flex; flex-direction: column; gap: 6px; }
-  .link-row { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 8px; font-size: 12.5px; }
-  .link-row label { color: var(--ink-faint); font-size: 11.5px; }
-  .link-row input { border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font-size: 12px; background: var(--surface); }
-  .link-row input:not(:placeholder-shown) { border-color: var(--accent); background: var(--accent-soft); }
+  .content-input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; resize: vertical; min-height: 220px; }
   .refs-list { display: flex; flex-wrap: wrap; gap: 6px; }
   .refs-list span { font-size: 11.5px; background: var(--surface-sunken); border-radius: 6px; padding: 3px 8px; }
-  .evidence-block textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; font-family: var(--font-mono); min-height: 56px; margin-bottom: 6px; }
-  .residual-input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; min-height: 44px; }
-  .evidence-save { margin-top: 8px; border: none; background: var(--ink); color: #fff; border-radius: 8px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; }
   .comment { display: flex; gap: 10px; margin-bottom: 12px; }
   .comment-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .comment-name { font-size: 12.5px; font-weight: 700; }
@@ -209,7 +190,7 @@
 <div class="topbar">
   <div class="topbar-row1">
     <div class="brand">
-      <span class="brand-name">治理看板</span>
+      <span class="brand-name">專案管理平台</span>
       <span class="brand-sub">ai/process/kanban.md 的視覺化 — Variant A · 控制塔</span>
     </div>
     <div class="view-tabs" role="tablist">
@@ -248,20 +229,6 @@
     { id: "done",          label: "Done 完成",         color: "#1f9d6b" }
   ];
   var WIP_CAPS = { implementing: 3, verify: 5 };
-  var READINESS_ITEMS = [
-    ["problem_clear", "問題已釐清"], ["non_goals_clear", "非目標已釐清"],
-    ["acceptance_testable", "驗收標準可測試"], ["files_known", "相關檔案或搜尋入口已知"],
-    ["scope_defined", "允許範圍已界定"], ["verification_contract", "驗證契約存在"],
-    ["human_approval_recorded", "人工核准已記錄（如需要）"]
-  ];
-  var GATE_ITEMS = [
-    ["product", "產品"], ["ui", "UI"], ["architecture", "架構"],
-    ["security", "安全"], ["test", "測試"], ["code_review", "Code Review"]
-  ];
-  var LINK_ITEMS = [
-    ["featureSpec", "功能規格"], ["screenSpec", "畫面規格"], ["mockupDecision", "Mockup 決策"],
-    ["taskCard", "任務卡"], ["verificationReport", "驗證報告"], ["pr", "PR / commit"]
-  ];
 
   var TICKETS = [];
   var EPICS = [];
@@ -333,14 +300,12 @@
     if (tk.agent) badges += '<span class="pill agent-pill">' + escapeHtml(tk.agent) + "</span>";
     if (tk.approvalRequired) badges += '<span class="pill approval-pill">需人工核准</span>';
     badges += dependsOnBadge(tk);
-    var readinessDone = READINESS_ITEMS.filter(function (r) { return tk.readiness[r[0]]; }).length;
     return (
       '<div class="ticket-card risk-stripe-' + tk.risk + '" data-id="' + escapeHtml(tk.id) + '" draggable="true" tabindex="0">' +
       '<div class="ticket-id mono">' + tk.id + "</div>" +
       '<div class="ticket-title">' + escapeHtml(tk.title) + "</div>" +
       '<div class="ticket-badges">' + badges + "</div>" +
-      '<div class="ticket-meta-row"><span>' + escapeHtml(tk.owner) + "</span>" +
-      '<span class="tabular">✓ ' + readinessDone + "/7</span></div>" +
+      '<div class="ticket-meta-row"><span>' + escapeHtml(tk.owner) + "</span></div>" +
       "</div>"
     );
   }
@@ -467,55 +432,11 @@
     if (!tk) return;
     var stage = STAGES[stageIndex(tk.stage)];
 
-    var stageOptions = STAGES.map(function (s) {
-      return '<option value="' + s.id + '"' + (s.id === tk.stage ? " selected" : "") + ">" + s.label + "</option>";
-    }).join("");
-    var riskOptions = ["low", "medium", "high"].map(function (r) {
-      return '<option value="' + r + '"' + (r === tk.risk ? " selected" : "") + ">" + riskLabel(r) + "</option>";
-    }).join("");
-    var trackOptions = ["n/a", "frontend", "backend", "integration"].map(function (t) {
-      return '<option value="' + t + '"' + (t === tk.track ? " selected" : "") + ">" + (t === "n/a" ? "不適用" : trackLabel(t)) + "</option>";
-    }).join("");
-
-    var epicOptions = '<option value=""' + (tk.epic ? "" : " selected") + ">（未分類）</option>" +
-      EPICS.map(function (e) {
-        return '<option value="' + escapeHtml(e.name) + '"' + (e.name === tk.epic ? " selected" : "") + ">" + escapeHtml(e.name) + "</option>";
-      }).join("");
-    var currentEpic = EPICS.filter(function (e) { return e.name === tk.epic; })[0];
-    var storyOptions = '<option value=""' + (tk.userStory ? "" : " selected") + ">（未分類）</option>" +
-      (currentEpic ? currentEpic.stories.map(function (s) {
-        return '<option value="' + escapeHtml(s.name) + '"' + (s.name === tk.userStory ? " selected" : "") + ">" + escapeHtml(s.name) + "</option>";
-      }).join("") : "");
-
-    var readiness = READINESS_ITEMS.map(function (item) {
-      var done = !!tk.readiness[item[0]];
-      return '<button type="button" class="check-row' + (done ? " is-done" : "") + '" data-readiness="' + item[0] + '">' +
-        '<span class="check-dot">' + (done ? "✓" : "") + '</span><span class="check-text">' + item[1] + "</span></button>";
-    }).join("");
-
-    var gates = GATE_ITEMS.map(function (item) {
-      var approved = !!tk.gates[item[0]];
-      return '<button type="button" class="gate-chip ' + (approved ? "approved" : "pending") + '" data-gate="' + item[0] + '">' +
-        '<span class="gname">' + item[1] + '</span><span class="gstatus">' + (approved ? "已核准" : "待審查") + "</span></button>";
-    }).join("");
-
-    var links = LINK_ITEMS.map(function (item) {
-      return '<div class="link-row"><label>' + item[1] + '</label><input type="text" data-link="' + item[0] +
-        '" placeholder="尚未產出" value="' + escapeHtml(tk.links[item[0]] || "") + '"></div>';
-    }).join("");
+    var dependsOnText = (tk.dependsOn && tk.dependsOn.length) ? tk.dependsOn.join("、") : "無";
 
     var refs = tk.refs.length
       ? '<div class="refs-list">' + tk.refs.map(function (r) { return "<span class=\"mono\">" + escapeHtml(r) + "</span>"; }).join("") + "</div>"
       : '<p class="no-comment">尚無關聯檔案。</p>';
-
-    var ev = tk.evidence;
-    var evidenceHtml =
-      '<div class="evidence-block">' +
-      '<textarea data-ev="commands" placeholder="驗證指令，一行一個">' + escapeHtml(ev.commands.join("\n")) + "</textarea>" +
-      '<textarea data-ev="findings" placeholder="發現，一行一個">' + escapeHtml(ev.findings.join("\n")) + "</textarea>" +
-      '<textarea class="residual-input" data-ev="residual" placeholder="殘留風險">' + escapeHtml(ev.residual) + "</textarea>" +
-      '<button type="button" class="evidence-save" id="save-evidence">儲存驗證證據</button>' +
-      "</div>";
 
     var commentsHtml = tk.comments.length
       ? tk.comments.map(function (c) {
@@ -529,29 +450,20 @@
       '<div class="modal-head"><div style="flex:1;"><div class="modal-id mono">' + tk.id + '</div>' +
       '<input class="modal-title-input" id="field-title" value="' + escapeHtml(tk.title) + '"></div>' +
       '<button type="button" class="modal-close" id="modal-close-btn">✕</button></div>' +
-      '<div class="modal-meta">' +
-      '<span class="meta-field">階段 <select id="field-stage">' + stageOptions + "</select></span>" +
-      '<span class="meta-field">風險 <select id="field-risk">' + riskOptions + "</select></span>" +
-      '<span class="meta-field">分軌 <select id="field-track">' + trackOptions + "</select></span>" +
-      '<span class="meta-field">Owner <input type="text" id="field-owner" value="' + escapeHtml(tk.owner) + '"></span>' +
-      '<span class="meta-field">Agent <input type="text" id="field-agent" value="' + escapeHtml(tk.agent) + '"></span>' +
-      '<label class="meta-field"><input type="checkbox" id="field-approval"' + (tk.approvalRequired ? " checked" : "") + "> 需人工核准</label>" +
-      "</div>" +
-      '<div class="modal-meta">' +
-      '<span class="meta-field">Epic <select id="field-epic">' + epicOptions + "</select></span>" +
-      '<span class="meta-field">User Story <select id="field-story">' + storyOptions + "</select></span>" +
-      "</div>" +
-      '<div class="modal-meta">' +
-      '<span class="meta-field" style="flex:1;">前置任務（dependsOn，逗號分隔卡片 id） ' +
-      '<input type="text" id="field-depends-on" placeholder="例如 TASK-001, TASK-002" value="' + escapeHtml((tk.dependsOn || []).join(", ")) + '"></span>' +
+      '<div class="modal-meta-static">' +
+      '<div class="meta-item"><span class="meta-label">階段</span><span class="meta-value"><span class="stage-dot" style="background:' + stage.color + '"></span>' + stage.label + "</span></div>" +
+      '<div class="meta-item"><span class="meta-label">風險</span><span class="meta-value">' + riskLabel(tk.risk) + "</span></div>" +
+      '<div class="meta-item"><span class="meta-label">分軌</span><span class="meta-value">' + (tk.track && tk.track !== "n/a" ? trackLabel(tk.track) : "不適用") + "</span></div>" +
+      '<div class="meta-item"><span class="meta-label">Owner</span><span class="meta-value">' + (escapeHtml(tk.owner) || "—") + "</span></div>" +
+      '<div class="meta-item"><span class="meta-label">Agent</span><span class="meta-value">' + (escapeHtml(tk.agent) || "—") + "</span></div>" +
+      '<div class="meta-item"><span class="meta-label">需人工核准</span><span class="meta-value">' + (tk.approvalRequired ? "是" : "否") + "</span></div>" +
+      '<div class="meta-item"><span class="meta-label">Epic</span><span class="meta-value">' + (escapeHtml(tk.epic) || "（未分類）") + "</span></div>" +
+      '<div class="meta-item"><span class="meta-label">User Story</span><span class="meta-value">' + (escapeHtml(tk.userStory) || "（未分類）") + "</span></div>" +
+      '<div class="meta-item meta-item-wide"><span class="meta-label">前置任務（dependsOn）</span><span class="meta-value">' + escapeHtml(dependsOnText) + "</span></div>" +
       "</div>" +
       '<div class="modal-body">' +
       '<div><span class="modal-section-label">描述</span><textarea class="content-input" id="field-content" placeholder="補充說明…">' + escapeHtml(tk.content) + "</textarea></div>" +
-      '<div><span class="modal-section-label">Readiness</span><div class="check-list">' + readiness + "</div></div>" +
-      '<div><span class="modal-section-label">Review Gates</span><div class="gate-grid">' + gates + "</div></div>" +
-      '<div><span class="modal-section-label">關聯文件</span><div class="link-grid">' + links + "</div></div>" +
       '<div><span class="modal-section-label">相關檔案</span>' + refs + "</div>" +
-      '<div><span class="modal-section-label">驗證證據</span>' + evidenceHtml + "</div>" +
       '<div><span class="modal-section-label">留言</span>' + commentsHtml +
       '<div class="comment-form"><textarea id="new-comment" placeholder="留個言…"></textarea><button type="button" id="add-comment">送出</button></div></div>' +
       "</div>" +
@@ -692,34 +604,6 @@
     if (e.target === document.getElementById("modal-overlay")) { closeModal(); return; }
     if (e.target.id === "modal-close-btn") { closeModal(); return; }
 
-    var readinessBtn = e.target.closest("[data-readiness]");
-    if (readinessBtn && openId) {
-      var tk1 = getTicket(openId);
-      var key = readinessBtn.dataset.readiness;
-      tk1.readiness[key] = !tk1.readiness[key];
-      saveOne(tk1).then(function () { openModal(openId); renderAll(); });
-      return;
-    }
-
-    var gateBtn = e.target.closest("[data-gate]");
-    if (gateBtn && openId) {
-      var tk2 = getTicket(openId);
-      var gkey = gateBtn.dataset.gate;
-      tk2.gates[gkey] = !tk2.gates[gkey];
-      saveOne(tk2).then(function () { openModal(openId); renderAll(); });
-      return;
-    }
-
-    if (e.target.id === "save-evidence" && openId) {
-      var tk3 = getTicket(openId);
-      var modalEl = document.getElementById("modal");
-      tk3.evidence.commands = modalEl.querySelector('[data-ev="commands"]').value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
-      tk3.evidence.findings = modalEl.querySelector('[data-ev="findings"]').value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
-      tk3.evidence.residual = modalEl.querySelector('[data-ev="residual"]').value.trim();
-      saveOne(tk3).then(function () { showToast("已儲存驗證證據"); });
-      return;
-    }
-
     if (e.target.id === "add-comment" && openId) {
       var tk4 = getTicket(openId);
       var textarea = document.getElementById("new-comment");
@@ -745,55 +629,13 @@
     }
   });
 
-  document.addEventListener("change", function (e) {
-    if (!openId) return;
-    var tk = getTicket(openId);
-    if (e.target.id === "field-stage") {
-      var prevStage = tk.stage, prevOrder = tk.order;
-      tk.stage = e.target.value;
-      tk.order = ticketsByStage(tk.stage).length + 1;
-      saveOne(tk).then(function () { renderAll(); }).catch(function () {
-        tk.stage = prevStage; tk.order = prevOrder;
-        renderAll(); openModal(openId);
-      });
-    } else if (e.target.id === "field-risk") {
-      tk.risk = e.target.value; persistField(tk);
-    } else if (e.target.id === "field-track") {
-      tk.track = e.target.value; persistField(tk);
-    } else if (e.target.id === "field-approval") {
-      tk.approvalRequired = e.target.checked; persistField(tk);
-    } else if (e.target.id === "field-epic") {
-      tk.epic = e.target.value; tk.userStory = "";
-      saveOne(tk).then(function () { renderAll(); openModal(openId); });
-    } else if (e.target.id === "field-story") {
-      tk.userStory = e.target.value; persistField(tk);
-    }
-  });
-
   document.addEventListener("blur", function (e) {
     if (!openId) return;
     var tk = getTicket(openId);
     if (e.target.id === "field-title" && e.target.value.trim() && e.target.value !== tk.title) {
       tk.title = e.target.value.trim(); persistField(tk);
-    } else if (e.target.id === "field-owner" && e.target.value !== tk.owner) {
-      tk.owner = e.target.value; persistField(tk);
-    } else if (e.target.id === "field-agent" && e.target.value !== tk.agent) {
-      tk.agent = e.target.value; persistField(tk);
     } else if (e.target.id === "field-content" && e.target.value !== tk.content) {
       tk.content = e.target.value; persistField(tk);
-    } else if (e.target.matches("[data-link]")) {
-      var lk = e.target.dataset.link;
-      if (tk.links[lk] !== e.target.value) { tk.links[lk] = e.target.value; persistField(tk); }
-    } else if (e.target.id === "field-depends-on") {
-      var newDeps = e.target.value.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-      if (newDeps.join(",") !== (tk.dependsOn || []).join(",")) {
-        var prevDeps = tk.dependsOn;
-        tk.dependsOn = newDeps;
-        saveOne(tk).then(function () { renderAll(); }).catch(function () {
-          tk.dependsOn = prevDeps;
-          renderAll(); openModal(openId);
-        });
-      }
     }
   }, true);
 
