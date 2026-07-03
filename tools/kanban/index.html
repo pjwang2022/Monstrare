@@ -75,6 +75,7 @@
   .risk-medium { background: var(--warn-soft); color: var(--warn); }
   .risk-high { background: var(--crit-soft); color: var(--crit); }
   .agent-pill { background: var(--accent-soft); color: var(--accent); }
+  .track-pill { background: var(--surface-sunken); color: var(--ink-dim); font-weight: 600; }
   .approval-pill { background: var(--surface); color: var(--ink-dim); border: 1px solid var(--line-strong); }
   .risk-stripe-low::before { background: var(--muted); }
   .risk-stripe-medium::before { background: var(--warn); }
@@ -275,6 +276,7 @@
     });
   }
   function riskLabel(r) { return { low: "低風險", medium: "中風險", high: "高風險" }[r] || r; }
+  function trackLabel(t) { return { frontend: "前端", backend: "後端", integration: "前後端串接", "n/a": "" }[t] || ""; }
 
   /* ── API ── */
   function api(path, options) {
@@ -312,6 +314,7 @@
   /* ── render: lanes ── */
   function cardHtml(tk) {
     var badges = '<span class="pill risk-' + tk.risk + '">' + riskLabel(tk.risk) + "</span>";
+    if (tk.track && tk.track !== "n/a") badges += '<span class="pill track-pill">' + trackLabel(tk.track) + "</span>";
     if (tk.agent) badges += '<span class="pill agent-pill">' + escapeHtml(tk.agent) + "</span>";
     if (tk.approvalRequired) badges += '<span class="pill approval-pill">需人工核准</span>';
     var readinessDone = READINESS_ITEMS.filter(function (r) { return tk.readiness[r[0]]; }).length;
@@ -372,6 +375,7 @@
       '<span class="task-dot" style="background:' + stage.color + '"></span>' +
       '<span class="task-id mono">' + tk.id + "</span>" +
       '<span class="task-title' + (done ? " is-done" : "") + '">' + escapeHtml(tk.title) + "</span>" +
+      (tk.track && tk.track !== "n/a" ? '<span class="pill track-pill">' + trackLabel(tk.track) + "</span>" : "") +
       '<span class="pill risk-' + tk.risk + '">' + riskLabel(tk.risk) + "</span>" +
       "</button>"
     );
@@ -453,6 +457,9 @@
     var riskOptions = ["low", "medium", "high"].map(function (r) {
       return '<option value="' + r + '"' + (r === tk.risk ? " selected" : "") + ">" + riskLabel(r) + "</option>";
     }).join("");
+    var trackOptions = ["n/a", "frontend", "backend", "integration"].map(function (t) {
+      return '<option value="' + t + '"' + (t === tk.track ? " selected" : "") + ">" + (t === "n/a" ? "不適用" : trackLabel(t)) + "</option>";
+    }).join("");
 
     var epicOptions = '<option value=""' + (tk.epic ? "" : " selected") + ">（未分類）</option>" +
       EPICS.map(function (e) {
@@ -509,6 +516,7 @@
       '<div class="modal-meta">' +
       '<span class="meta-field">階段 <select id="field-stage">' + stageOptions + "</select></span>" +
       '<span class="meta-field">風險 <select id="field-risk">' + riskOptions + "</select></span>" +
+      '<span class="meta-field">分軌 <select id="field-track">' + trackOptions + "</select></span>" +
       '<span class="meta-field">Owner <input type="text" id="field-owner" value="' + escapeHtml(tk.owner) + '"></span>' +
       '<span class="meta-field">Agent <input type="text" id="field-agent" value="' + escapeHtml(tk.agent) + '"></span>' +
       '<label class="meta-field"><input type="checkbox" id="field-approval"' + (tk.approvalRequired ? " checked" : "") + "> 需人工核准</label>" +
@@ -726,6 +734,8 @@
       persistField(tk);
     } else if (e.target.id === "field-risk") {
       tk.risk = e.target.value; persistField(tk);
+    } else if (e.target.id === "field-track") {
+      tk.track = e.target.value; persistField(tk);
     } else if (e.target.id === "field-approval") {
       tk.approvalRequired = e.target.checked; persistField(tk);
     } else if (e.target.id === "field-epic") {

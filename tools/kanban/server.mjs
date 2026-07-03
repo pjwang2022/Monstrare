@@ -18,9 +18,11 @@ const EPICS_JSON = path.join(ROOT, 'epics.json');
 
 fs.mkdirSync(CARDS_DIR, { recursive: true });
 
-const ID_RE = /^GOV-\d{3,}$/;
+const ID_PREFIX = 'BOOK';
+const ID_RE = new RegExp('^' + ID_PREFIX + '-\\d{3,}$');
 const STAGES = ['backlog', 'blocked', 'ready', 'implementing', 'verify', 'done'];
 const RISKS = ['low', 'medium', 'high'];
+const TRACKS = ['frontend', 'backend', 'integration', 'n/a'];
 const READINESS_KEYS = [
   'problem_clear', 'non_goals_clear', 'acceptance_testable', 'files_known',
   'scope_defined', 'verification_contract', 'human_approval_recorded'
@@ -51,7 +53,7 @@ function isPlainObject(v) {
 
 function validateCard(c) {
   if (!isPlainObject(c)) return 'card 必須是 object';
-  if (typeof c.id !== 'string' || !ID_RE.test(c.id)) return 'id 必須符合 ^GOV-\\d{3,}$';
+  if (typeof c.id !== 'string' || !ID_RE.test(c.id)) return 'id 必須符合 ^' + ID_PREFIX + '-\\d{3,}$';
   if (typeof c.title !== 'string' || c.title.trim() === '') return 'title 必須是非空字串';
   if (typeof c.content !== 'string') return 'content 必須是字串';
   if (!STAGES.includes(c.stage)) return 'stage 只允許 ' + STAGES.join('/');
@@ -63,6 +65,7 @@ function validateCard(c) {
   if (!Number.isInteger(c.order) || c.order < 1) return 'order 必須是 >= 1 的整數';
   if (typeof c.epic !== 'string') return 'epic 必須是字串';
   if (typeof c.userStory !== 'string') return 'userStory 必須是字串';
+  if (!TRACKS.includes(c.track)) return 'track 只允許 ' + TRACKS.join('/');
 
   if (!isPlainObject(c.readiness)) return 'readiness 必須是 object';
   for (const k of READINESS_KEYS) {
@@ -111,6 +114,7 @@ function fillDefaults(c) {
   if (c.approvalRequired === undefined) c.approvalRequired = false;
   if (c.epic === undefined) c.epic = '';
   if (c.userStory === undefined) c.userStory = '';
+  if (c.track === undefined) c.track = 'n/a';
   if (!isPlainObject(c.readiness)) c.readiness = defaultObj(READINESS_KEYS, false);
   else for (const k of READINESS_KEYS) if (c.readiness[k] === undefined) c.readiness[k] = false;
   if (!isPlainObject(c.gates)) c.gates = defaultObj(GATE_KEYS, false);
@@ -137,6 +141,7 @@ function writeCard(c) {
     createdAt: c.createdAt,
     epic: c.epic,
     userStory: c.userStory,
+    track: c.track,
     order: c.order,
     readiness: c.readiness,
     gates: c.gates,
@@ -208,11 +213,11 @@ function handlePost(res, body) {
   const input = JSON.parse(body);
   if (!isPlainObject(input)) return sendJson(res, 400, { error: 'body 必須是 object' });
   const existing = readAllCards();
-  const maxNum = existing.reduce((m, c) => Math.max(m, parseInt(c.id.slice(4), 10)), 0);
+  const maxNum = existing.reduce((m, c) => Math.max(m, parseInt(c.id.slice(ID_PREFIX.length + 1), 10)), 0);
   const stage = STAGES.includes(input.stage) ? input.stage : 'backlog';
   const inColumn = existing.filter((c) => c.stage === stage);
   const card = fillDefaults({
-    id: 'GOV-' + String(maxNum + 1).padStart(3, '0'),
+    id: ID_PREFIX + '-' + String(maxNum + 1).padStart(3, '0'),
     title: typeof input.title === 'string' ? input.title.trim() : '',
     content: typeof input.content === 'string' ? input.content : '',
     stage,
@@ -223,6 +228,7 @@ function handlePost(res, body) {
     createdAt: todayStr(),
     epic: typeof input.epic === 'string' ? input.epic : '',
     userStory: typeof input.userStory === 'string' ? input.userStory : '',
+    track: TRACKS.includes(input.track) ? input.track : 'n/a',
     order: inColumn.length + 1,
     readiness: input.readiness,
     gates: input.gates,
@@ -270,7 +276,7 @@ const server = http.createServer(async (req, res) => {
     const match = pathname.match(/^\/api\/cards\/([^/]+)$/);
     if (match) {
       const id = decodeURIComponent(match[1]);
-      if (!ID_RE.test(id)) return sendJson(res, 400, { error: 'id 必須符合 ^GOV-\\d{3,}$' });
+      if (!ID_RE.test(id)) return sendJson(res, 400, { error: 'id 必須符合 ^' + ID_PREFIX + '-\\d{3,}$' });
       if (req.method === 'PUT') return handlePutOne(res, id, await readBody(req));
       if (req.method === 'DELETE') return handleDelete(res, id);
       return sendJson(res, 405, { error: 'method not allowed' });
