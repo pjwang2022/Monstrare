@@ -48,6 +48,7 @@ npm run kanban
 | `createdAt` | string | 建立日期 `YYYY-MM-DD`，新增時由 server 填當天 |
 | `epic` | string | 對應 `epics.json` 裡某個 Epic 的 `name`，留空代表未分類 |
 | `userStory` | string | 對應該 Epic 底下某個 User Story 的 `name`，留空代表未分類 |
+| `dependsOn` | array | 前置任務卡片 id 陣列（字串），預設 `[]`；要推進到 `ready`／`implementing`／`verify`／`done` 前，陣列裡列出的卡片都必須是 `done`，見下方「dependsOn 硬防呆」 |
 | `order` | number | 欄內排序，整數、欄內從 1 起 |
 | `readiness` | object | 對應 `ai/templates/kanban-card.md` 的 7 項 Readiness，各為 boolean |
 | `gates` | object | 6 個 Review Gates（product/ui/architecture/security/test/code_review），各為 boolean |
@@ -70,6 +71,18 @@ npm run kanban
 | `DELETE` | `/api/cards/:id` | 刪卡（刪檔） |
 
 非法 id / stage / risk 格式一律回 400；PUT/POST body 缺少物件型欄位時由 server 補預設值。
+
+### dependsOn 硬防呆
+
+`PUT /api/cards/:id`、`PUT /api/cards`（bulk）、`POST /api/cards` 對 `dependsOn` 一律做以下檢查，違反時回 400、不寫入檔案：
+
+- **格式**：必須是字串陣列，且每個元素要符合 id 格式 `^{ID_PREFIX}-\d{3,}$`。
+- **自我依賴**：不可包含卡片自己的 id。
+- **存在性**：陣列裡的每個 id 都必須是目前真的存在的卡片（含這次請求裡一起送進來的其他卡）。
+- **循環依賴**：以 `dependsOn` 建圖做 DFS，偵測到循環（例如 `A -> B -> A`）就拒絕，錯誤訊息會列出循環路徑。
+- **推進阻擋**：若這次要把 `stage` 改成 `ready`／`implementing`／`verify`／`done` 之一，`dependsOn` 列出的卡片必須全部是 `done`，否則回 400 並列出還沒完成的卡片 id 與標題。移動到 `backlog`／`blocked` 不受此限制。
+
+刪除卡片不會自動清除其他卡對它的 `dependsOn` 參照；看板 UI 讀到參照不存在的 id 時會顯示警示，但不會擋任何操作。
 
 ## 已知限制（v1）
 

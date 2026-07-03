@@ -23,6 +23,7 @@ fs.mkdirSync(CARDS_DIR, { recursive: true });
 const ID_PREFIX = 'TASK';
 const ID_RE = new RegExp('^' + ID_PREFIX + '-\\d{3,}$');
 const STAGES = ['backlog', 'blocked', 'ready', 'implementing', 'verify', 'done'];
+const ADVANCED_STAGES = ['ready', 'implementing', 'verify', 'done'];
 const RISKS = ['low', 'medium', 'high'];
 const TRACKS = ['frontend', 'backend', 'integration', 'n/a'];
 const READINESS_KEYS = [
@@ -68,6 +69,10 @@ function validateCard(c) {
   if (typeof c.epic !== 'string') return 'epic 必須是字串';
   if (typeof c.userStory !== 'string') return 'userStory 必須是字串';
   if (!TRACKS.includes(c.track)) return 'track 只允許 ' + TRACKS.join('/');
+  if (!Array.isArray(c.dependsOn) || c.dependsOn.some((x) => typeof x !== 'string' || !ID_RE.test(x))) {
+    return 'dependsOn 必須是字串陣列，且每個元素需符合 id 格式 ^' + ID_PREFIX + '-\\d{3,}$';
+  }
+  if (c.dependsOn.includes(c.id)) return 'dependsOn 不可包含自己的 id';
 
   if (!isPlainObject(c.readiness)) return 'readiness 必須是 object';
   for (const k of READINESS_KEYS) {
@@ -117,6 +122,7 @@ function fillDefaults(c) {
   if (c.epic === undefined) c.epic = '';
   if (c.userStory === undefined) c.userStory = '';
   if (c.track === undefined) c.track = 'n/a';
+  if (!Array.isArray(c.dependsOn)) c.dependsOn = [];
   if (!isPlainObject(c.readiness)) c.readiness = defaultObj(READINESS_KEYS, false);
   else for (const k of READINESS_KEYS) if (c.readiness[k] === undefined) c.readiness[k] = false;
   if (!isPlainObject(c.gates)) c.gates = defaultObj(GATE_KEYS, false);
@@ -144,6 +150,7 @@ function writeCard(c) {
     epic: c.epic,
     userStory: c.userStory,
     track: c.track,
+    dependsOn: c.dependsOn,
     order: c.order,
     readiness: c.readiness,
     gates: c.gates,
@@ -167,6 +174,56 @@ function readAllCards() {
     a.id.localeCompare(b.id)
   );
   return cards;
+}
+
+/**
+ * 從 startId 沿 dependsOn 邊做 DFS，找出第一個可達的循環。
+ * cardMap 必須包含這次請求裡「即將寫入」的最新版本（覆蓋掉舊檔內容）。
+ * 回傳循環路徑（含重複的起點，方便顯示 "A -> B -> A"），沒有循環回傳 null。
+ */
+function detectCycle(startId, cardMap) {
+  const path = [];
+  const onPath = new Set();
+  function visit(id) {
+    if (onPath.has(id)) return path.slice(path.indexOf(id)).concat(id);
+    const card = cardMap.get(id);
+    if (!card || !Array.isArray(card.dependsOn)) return null;
+    path.push(id);
+    onPath.add(id);
+    for (const dep of card.dependsOn) {
+      const cycle = visit(dep);
+      if (cycle) return cycle;
+    }
+    path.pop();
+    onPath.delete(id);
+    return null;
+  }
+  return visit(startId);
+}
+
+/**
+ * 檢查一張卡的 dependsOn：參照是否存在、是否形成循環、
+ * 若要推進到 ready/implementing/verify/done，前置任務是否皆已 done。
+ * cardMap 必須包含這次請求裡「即將寫入」的最新版本。回傳錯誤字串，沒有問題回傳 null。
+ */
+function checkDependsOn(card, cardMap) {
+  const missing = card.dependsOn.filter((depId) => !cardMap.has(depId));
+  if (missing.length) return card.id + ': dependsOn 參照到不存在的卡片：' + missing.join(', ');
+
+  const cycle = detectCycle(card.id, cardMap);
+  if (cycle) return card.id + ': 偵測到循環依賴：' + cycle.join(' -> ');
+
+  if (ADVANCED_STAGES.includes(card.stage)) {
+    const unmet = card.dependsOn.map((depId) => cardMap.get(depId)).filter((dep) => dep.stage !== 'done');
+    if (unmet.length) {
+      return (
+        card.id + ': 前置任務尚未完成（' +
+        unmet.map((d) => d.id + ' ' + d.title).join('、') +
+        '），無法推進到 ' + card.stage
+      );
+    }
+  }
+  return null;
 }
 
 function todayStr() {
@@ -196,6 +253,10 @@ function handlePutOne(res, id, body) {
   if (c.id !== id) return sendJson(res, 400, { error: 'body 的 id 與 URL 不一致' });
   const err = validateCard(c);
   if (err) return sendJson(res, 400, { error: err });
+  const cardMap = new Map(readAllCards().map((x) => [x.id, x]));
+  cardMap.set(c.id, c);
+  const depErr = checkDependsOn(c, cardMap);
+  if (depErr) return sendJson(res, 400, { error: depErr });
   writeCard(c);
   sendJson(res, 200, c);
 }
@@ -206,6 +267,12 @@ function handlePutBulk(res, body) {
   for (const c of list) {
     const err = validateCard(fillDefaults(c));
     if (err) return sendJson(res, 400, { error: (c && c.id ? c.id + ': ' : '') + err });
+  }
+  const cardMap = new Map(readAllCards().map((x) => [x.id, x]));
+  for (const c of list) cardMap.set(c.id, c);
+  for (const c of list) {
+    const depErr = checkDependsOn(c, cardMap);
+    if (depErr) return sendJson(res, 400, { error: depErr });
   }
   for (const c of list) writeCard(c);
   sendJson(res, 200, { updated: list.length });
@@ -231,6 +298,7 @@ function handlePost(res, body) {
     epic: typeof input.epic === 'string' ? input.epic : '',
     userStory: typeof input.userStory === 'string' ? input.userStory : '',
     track: TRACKS.includes(input.track) ? input.track : 'n/a',
+    dependsOn: Array.isArray(input.dependsOn) ? input.dependsOn : [],
     order: inColumn.length + 1,
     readiness: input.readiness,
     gates: input.gates,
@@ -241,6 +309,10 @@ function handlePost(res, body) {
   });
   const err = validateCard(card);
   if (err) return sendJson(res, 400, { error: err });
+  const cardMap = new Map(existing.map((x) => [x.id, x]));
+  cardMap.set(card.id, card);
+  const depErr = checkDependsOn(card, cardMap);
+  if (depErr) return sendJson(res, 400, { error: depErr });
   writeCard(card);
   sendJson(res, 201, card);
 }

@@ -76,6 +76,9 @@
   .risk-high { background: var(--crit-soft); color: var(--crit); }
   .agent-pill { background: var(--accent-soft); color: var(--accent); }
   .track-pill { background: var(--surface-sunken); color: var(--ink-dim); font-weight: 600; }
+  .dep-pill.dep-blocked { background: var(--crit-soft); color: var(--crit); }
+  .dep-pill.dep-missing { background: var(--warn-soft); color: var(--warn); }
+  .dep-pill.dep-ok { background: var(--surface-sunken); color: var(--ink-dim); font-weight: 600; }
   .approval-pill { background: var(--surface); color: var(--ink-dim); border: 1px solid var(--line-strong); }
   .risk-stripe-low::before { background: var(--muted); }
   .risk-stripe-medium::before { background: var(--warn); }
@@ -312,11 +315,24 @@
   }
 
   /* ── render: lanes ── */
+  function dependsOnBadge(tk) {
+    if (!tk.dependsOn || !tk.dependsOn.length) return "";
+    var missing = [], unmet = [];
+    tk.dependsOn.forEach(function (id) {
+      var dep = getTicket(id);
+      if (!dep) missing.push(id); else if (dep.stage !== "done") unmet.push(id);
+    });
+    if (missing.length) return '<span class="pill dep-pill dep-missing">⚠️ 依賴的卡片已不存在</span>';
+    if (unmet.length) return '<span class="pill dep-pill dep-blocked">⛔ 依賴 ' + unmet.length + ' 張未完成</span>';
+    return '<span class="pill dep-pill dep-ok">🔗 依賴 ' + tk.dependsOn.length + ' 張（已完成）</span>';
+  }
+
   function cardHtml(tk) {
     var badges = '<span class="pill risk-' + tk.risk + '">' + riskLabel(tk.risk) + "</span>";
     if (tk.track && tk.track !== "n/a") badges += '<span class="pill track-pill">' + trackLabel(tk.track) + "</span>";
     if (tk.agent) badges += '<span class="pill agent-pill">' + escapeHtml(tk.agent) + "</span>";
     if (tk.approvalRequired) badges += '<span class="pill approval-pill">需人工核准</span>';
+    badges += dependsOnBadge(tk);
     var readinessDone = READINESS_ITEMS.filter(function (r) { return tk.readiness[r[0]]; }).length;
     return (
       '<div class="ticket-card risk-stripe-' + tk.risk + '" data-id="' + escapeHtml(tk.id) + '" draggable="true" tabindex="0">' +
@@ -525,6 +541,10 @@
       '<span class="meta-field">Epic <select id="field-epic">' + epicOptions + "</select></span>" +
       '<span class="meta-field">User Story <select id="field-story">' + storyOptions + "</select></span>" +
       "</div>" +
+      '<div class="modal-meta">' +
+      '<span class="meta-field" style="flex:1;">前置任務（dependsOn，逗號分隔卡片 id） ' +
+      '<input type="text" id="field-depends-on" placeholder="例如 TASK-001, TASK-002" value="' + escapeHtml((tk.dependsOn || []).join(", ")) + '"></span>' +
+      "</div>" +
       '<div class="modal-body">' +
       '<div><span class="modal-section-label">描述</span><textarea class="content-input" id="field-content" placeholder="補充說明…">' + escapeHtml(tk.content) + "</textarea></div>" +
       '<div><span class="modal-section-label">Readiness</span><div class="check-list">' + readiness + "</div></div>" +
@@ -729,9 +749,13 @@
     if (!openId) return;
     var tk = getTicket(openId);
     if (e.target.id === "field-stage") {
+      var prevStage = tk.stage, prevOrder = tk.order;
       tk.stage = e.target.value;
       tk.order = ticketsByStage(tk.stage).length + 1;
-      persistField(tk);
+      saveOne(tk).then(function () { renderAll(); }).catch(function () {
+        tk.stage = prevStage; tk.order = prevOrder;
+        renderAll(); openModal(openId);
+      });
     } else if (e.target.id === "field-risk") {
       tk.risk = e.target.value; persistField(tk);
     } else if (e.target.id === "field-track") {
@@ -760,6 +784,16 @@
     } else if (e.target.matches("[data-link]")) {
       var lk = e.target.dataset.link;
       if (tk.links[lk] !== e.target.value) { tk.links[lk] = e.target.value; persistField(tk); }
+    } else if (e.target.id === "field-depends-on") {
+      var newDeps = e.target.value.split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+      if (newDeps.join(",") !== (tk.dependsOn || []).join(",")) {
+        var prevDeps = tk.dependsOn;
+        tk.dependsOn = newDeps;
+        saveOne(tk).then(function () { renderAll(); }).catch(function () {
+          tk.dependsOn = prevDeps;
+          renderAll(); openModal(openId);
+        });
+      }
     }
   }, true);
 
