@@ -18,7 +18,9 @@ const EPICS_JSON = path.join(ROOT, 'epics.json');
 
 fs.mkdirSync(CARDS_DIR, { recursive: true });
 
-const ID_PREFIX = 'BOOK';
+// Customize this per project (e.g. team or product initials). Card IDs are
+// generated as `${ID_PREFIX}-001`, `${ID_PREFIX}-002`, ...
+const ID_PREFIX = 'TASK';
 const ID_RE = new RegExp('^' + ID_PREFIX + '-\\d{3,}$');
 const STAGES = ['backlog', 'blocked', 'ready', 'implementing', 'verify', 'done'];
 const RISKS = ['low', 'medium', 'high'];

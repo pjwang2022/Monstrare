@@ -37,7 +37,7 @@ npm run kanban
 
 | 欄位 | 型別 | 說明 |
 | --- | --- | --- |
-| `id` | string | 專案代碼前綴 + 流水號（`server.mjs` 的 `ID_PREFIX`，目前是 `BOOK-`），新增時由 server 配號 |
+| `id` | string | 專案代碼前綴 + 流水號（`server.mjs` 的 `ID_PREFIX`，預設是 `TASK-`，請依專案自訂），新增時由 server 配號 |
 | `title` | string | 標題（非空） |
 | `content` | string | 補充說明（純文字，不支援 markdown） |
 | `stage` | string | `backlog` / `blocked` / `ready` / `implementing` / `verify` / `done` 之一 |
