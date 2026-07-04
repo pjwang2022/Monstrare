@@ -90,16 +90,26 @@ tools/kanban/                 # 實作 ai/process/kanban.md 的本地看板
 
 ## 快速開始
 
-1. 把這個資料夾複製到你的專案根目錄。
-2. 把 `AGENTS.md` 與 `CLAUDE.md` 複製到專案根目錄，或留在這裡再從你現有的 agent 設定檔匯入。
-3. 執行專案情境搜尋：
+**要開新專案？** 直接把這個 repo clone 下來，在裡面直接開發——`AGENTS.md`、`CLAUDE.md` 與整套 `ai/` 工具已經在根目錄了。
+
+```bash
+git clone https://github.com/pjwang2022/Monstrare.git my-project
+cd my-project
+rm -rf .git && git init   # 建立你自己的 git 歷史
+```
+
+**要加進既有的專案？** 跳到下面的[安裝到既有專案](#安裝到既有專案)。
+
+不管走哪條路，檔案就定位後：
+
+1. 執行專案情境搜尋：
 
    ```text
    使用 project-search skill 建立 ai/context/project-map.md 與 ai/context/code-search-guide.md。
    先不要實作任何東西。
    ```
 
-4. 透過規格關卡開始一個新功能：
+2. 透過規格關卡開始一個新功能：
 
    ```text
    針對 <功能構想> 使用 spec-interrogation。
@@ -107,7 +117,7 @@ tools/kanban/                 # 實作 ai/process/kanban.md 的本地看板
    實作前先停下來，等待人工審閱。
    ```
 
-## 安裝到其他專案
+## 安裝到既有專案
 
 ```bash
 scripts/install-into-project.sh /path/to/your/project

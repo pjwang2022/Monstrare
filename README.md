@@ -98,16 +98,28 @@ tools/kanban/                 # Local Kanban board implementing ai/process/kanba
 
 ## Quick Start
 
-1. Copy this folder into the root of your project.
-2. Copy `AGENTS.md` and `CLAUDE.md` to your project root, or keep them here and import them from your existing agent files.
-3. Run project intake:
+**Starting a new project?** Clone this repo and build directly inside it —
+`AGENTS.md`, `CLAUDE.md`, and the whole `ai/` toolkit are already at the root.
+
+```bash
+git clone https://github.com/pjwang2022/Monstrare.git my-project
+cd my-project
+rm -rf .git && git init   # start your own history
+```
+
+**Adding this to an existing codebase instead?** Skip to
+[Install Into An Existing Project](#install-into-an-existing-project) below.
+
+Either way, once the files are in place:
+
+1. Run project intake:
 
    ```text
    Use the project-search skill to create ai/context/project-map.md and ai/context/code-search-guide.md.
    Do not implement anything yet.
    ```
 
-4. Start a feature through the spec gate:
+2. Start a feature through the spec gate:
 
    ```text
    Use spec-interrogation for: <feature idea>.
@@ -115,7 +127,7 @@ tools/kanban/                 # Local Kanban board implementing ai/process/kanba
    Stop before implementation for human review.
    ```
 
-## Install Into Another Project
+## Install Into An Existing Project
 
 ```bash
 scripts/install-into-project.sh /path/to/your/project
