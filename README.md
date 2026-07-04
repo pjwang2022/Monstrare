@@ -2,6 +2,8 @@
 
 **English** | [繁體中文](README.zh-TW.md)
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **A cloneable workflow layer that stops AI coding agents from shipping non-trivial changes based on vague requirements.**
 
 Copy this repo into any project. Claude Code, Codex, and other agentic tools
@@ -107,25 +109,36 @@ cd my-project
 rm -rf .git && git init   # start your own history
 ```
 
+Then open Claude Code or Codex in that folder and just describe what you want
+to build:
+
+```bash
+claude
+```
+
+```text
+I want to build an online booking system.
+```
+
+Since there's no Epic/User Story backlog yet, this triggers the
+`project-kickoff` skill: it breaks the idea into Epics -> User Stories ->
+Tasks and seeds `tools/kanban/`. Each task then walks through the phases in
+[How It Works](#how-it-works) on its own.
+
 **Adding this to an existing codebase instead?** Skip to
-[Install Into An Existing Project](#install-into-an-existing-project) below.
+[Install Into An Existing Project](#install-into-an-existing-project) below,
+then start from context discovery instead of `project-kickoff`:
 
-Either way, once the files are in place:
+```text
+Use the project-search skill to create ai/context/project-map.md and ai/context/code-search-guide.md.
+Do not implement anything yet.
+```
 
-1. Run project intake:
-
-   ```text
-   Use the project-search skill to create ai/context/project-map.md and ai/context/code-search-guide.md.
-   Do not implement anything yet.
-   ```
-
-2. Start a feature through the spec gate:
-
-   ```text
-   Use spec-interrogation for: <feature idea>.
-   Create a feature spec, screen specs if UI is involved, and AI-ready task cards.
-   Stop before implementation for human review.
-   ```
+```text
+Use spec-interrogation for: <feature idea>.
+Create a feature spec, screen specs if UI is involved, and AI-ready task cards.
+Stop before implementation for human review.
+```
 
 ## Install Into An Existing Project
 
@@ -143,16 +156,28 @@ scripts/check-governance.sh   # self-check from the repo root
 ## AI Kanban
 
 `ai/process/kanban.md` is the board policy — it tracks whether a task is
-ready for safe agent execution, not just its status. The `tools/kanban/`
-implementation above is optional; the policy doesn't require this specific tool.
+ready for safe agent execution, not just its status. `tools/kanban/` is one
+implementation of it: a zero-dependency local board that simplifies the
+policy's 12 stages down to 6 lanes (Backlog -> Blocked -> Ready ->
+Implementing -> Verify -> Done). The tool is optional; the policy doesn't
+require it.
 
-Recommended columns:
-
-```text
-Inbox -> Needs Clarification -> Needs Product Approval -> Needs UI Mockup
--> Needs Architecture Plan -> Needs Task Cards -> AI Ready -> Agent Working
--> Needs Verification -> Needs Review -> Human Acceptance -> Done
+```bash
+npm run kanban   # open http://127.0.0.1:4420
 ```
+
+![Kanban board](tools/kanban/docs/board-screenshot.png)
+
+- **Add a card** — click "+ 新增卡片" at the bottom of any lane; the server assigns the ID.
+- **Move a card** — drag it into another lane to change its stage, or reorder it within a lane.
+- **Edit details** — click a card to open its panel: owner, risk, agent, Readiness checklist, Review Gates, comments.
+- **Track by Epic/User Story** — switch to the "藍圖" (Roadmap) tab.
+
+![Roadmap view](tools/kanban/docs/roadmap-screenshot.png)
+
+Every action writes straight back to `cards/*.json` — no save button, no
+database; `git commit`/`git push` is how state is persisted and shared. Full
+schema and API reference: [`tools/kanban/README.md`](tools/kanban/README.md).
 
 ## Recommended Tool Pairings
 

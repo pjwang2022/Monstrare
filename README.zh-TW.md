@@ -2,6 +2,8 @@
 
 [English](README.md) | **繁體中文**
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **一個可直接複製使用的工作流程層，讓 AI coding agent 不會根據模糊需求就動手做出非小型變更。**
 
 把這個資料夾複製進任何專案，Claude Code、Codex 等 agentic 工具就會遵循同一套關卡流程——規格、規劃、任務卡、實作、驗證、審查——才讓程式碼進到 production。
@@ -98,24 +100,30 @@ cd my-project
 rm -rf .git && git init   # 建立你自己的 git 歷史
 ```
 
-**要加進既有的專案？** 跳到下面的[安裝到既有專案](#安裝到既有專案)。
+接著在這個資料夾裡開 Claude Code 或 Codex，直接講你想做什麼就好：
 
-不管走哪條路，檔案就定位後：
+```bash
+claude
+```
 
-1. 執行專案情境搜尋：
+```text
+我要做一個線上預約系統。
+```
 
-   ```text
-   使用 project-search skill 建立 ai/context/project-map.md 與 ai/context/code-search-guide.md。
-   先不要實作任何東西。
-   ```
+因為還沒有 Epic/User Story 待辦清單，這會觸發 `project-kickoff` skill：把構想拆解成 Epic → User Story → Task，並把資料建進 `tools/kanban/`。之後每張任務卡會各自走過 [治理流程怎麼運作](#架構流程怎麼運作) 裡的各個階段。
 
-2. 透過規格關卡開始一個新功能：
+**要加進既有的專案？** 跳到下面的[安裝到既有專案](#安裝到既有專案)，然後從情境探索開始，而不是 `project-kickoff`：
 
-   ```text
-   針對 <功能構想> 使用 spec-interrogation。
-   建立功能規格書，若涉及 UI 則一併建立 screen spec，並產出 AI-ready 任務卡。
-   實作前先停下來，等待人工審閱。
-   ```
+```text
+使用 project-search skill 建立 ai/context/project-map.md 與 ai/context/code-search-guide.md。
+先不要實作任何東西。
+```
+
+```text
+針對 <功能構想> 使用 spec-interrogation。
+建立功能規格書，若涉及 UI 則一併建立 screen spec，並產出 AI-ready 任務卡。
+實作前先停下來，等待人工審閱。
+```
 
 ## 安裝到既有專案
 
@@ -131,16 +139,22 @@ scripts/check-governance.sh   # 在本專案根目錄執行，做套件自我檢
 
 ## AI 看板
 
-`ai/process/kanban.md` 是看板政策——追蹤的是任務是否已就緒、可以安全交給 agent 執行，而不只是狀態。上面的 `tools/kanban/` 實作是選用的，政策本身不要求一定要用這個工具。
+`ai/process/kanban.md` 是看板政策——追蹤的是任務是否已就緒、可以安全交給 agent 執行，而不只是狀態。`tools/kanban/` 是這個政策的其中一種實作：零依賴的本地看板，把政策的 12 個階段簡化成 6 條車道（Backlog → Blocked → Ready → Implementing → Verify → Done）。這個工具是選用的，政策本身不要求一定要用它。
 
-建議欄位：
-
-```text
-Inbox（收件匣） -> Needs Clarification（待釐清） -> Needs Product Approval（待產品核准）
--> Needs UI Mockup（待 UI Mockup） -> Needs Architecture Plan（待架構規劃）
--> Needs Task Cards（待任務卡） -> AI Ready（AI 就緒） -> Agent Working（Agent 執行中）
--> Needs Verification（待驗證） -> Needs Review（待審查） -> Human Acceptance（待人工驗收） -> Done（完成）
+```bash
+npm run kanban   # 開 http://127.0.0.1:4420
 ```
+
+![看板畫面](tools/kanban/docs/board-screenshot.png)
+
+- **新增卡片**——點任一車道底部的「+ 新增卡片」，id 由 server 自動配號。
+- **移動卡片**——拖到別的車道就改變階段，同車道內拖曳可調整順序。
+- **編輯詳情**——點卡片開啟詳情面板：owner、risk、agent、Readiness 勾選、Review Gates、留言。
+- **依 Epic/User Story 看進度**——切到右上角「藍圖」分頁。
+
+![藍圖畫面](tools/kanban/docs/roadmap-screenshot.png)
+
+所有操作都即時寫回 `cards/*.json`——沒有儲存按鈕、沒有資料庫；`git commit`／`git push` 就是存檔與分享狀態的方式。完整的欄位規格與 API 說明：[`tools/kanban/README.md`](tools/kanban/README.md)。
 
 ## 建議搭配的工具
 
