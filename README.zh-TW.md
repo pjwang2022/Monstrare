@@ -102,10 +102,6 @@ rm -rf .git && git init   # 建立你自己的 git 歷史
 
 接著在這個資料夾裡開 Claude Code 或 Codex，直接講你想做什麼就好：
 
-```bash
-claude
-```
-
 ```text
 我要做一個線上預約系統。
 ```
@@ -155,18 +151,3 @@ npm run kanban   # 開 http://127.0.0.1:4420
 ![藍圖畫面](tools/kanban/docs/roadmap-screenshot.png)
 
 所有操作都即時寫回 `cards/*.json`——沒有儲存按鈕、沒有資料庫；`git commit`／`git push` 就是存檔與分享狀態的方式。完整的欄位規格與 API 說明：[`tools/kanban/README.md`](tools/kanban/README.md)。
-
-## 建議搭配的工具
-
-- 若可用，使用 Serena MCP 做語意化程式碼搜尋。
-- 想從 PRD 自動展開任務時，使用 Task Master。
-- 想要完整的規格優先指令堆疊時，使用 Spec Kit。
-- 使用 CodeRabbit、Qodo、Codex Review 或 Claude 的審查子代理作為最後一層審查。
-- 針對 lint、型別檢查、測試、build、安全性掃描，使用確定性的 CI 檢查。
-
-## GitHub 工作流程
-
-- `.github/ISSUE_TEMPLATE/ai_task.yml`：AI-ready 任務的建立表單。
-- `.github/pull_request_template.md`：驗證與審查證據的 PR 範本。
-
-讓 GitHub Issues 與 PR 使用跟 Claude Code、Codex 與本地任務卡一致的治理語言。

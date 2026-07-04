@@ -178,19 +178,3 @@ npm run kanban   # open http://127.0.0.1:4420
 Every action writes straight back to `cards/*.json` — no save button, no
 database; `git commit`/`git push` is how state is persisted and shared. Full
 schema and API reference: [`tools/kanban/README.md`](tools/kanban/README.md).
-
-## Recommended Tool Pairings
-
-- Serena MCP for semantic code search when available.
-- Task Master for automated task expansion from a PRD.
-- Spec Kit for a full spec-first command stack.
-- CodeRabbit, Qodo, Codex Review, or Claude review agents as a final review layer.
-- Deterministic CI checks for lint, typecheck, tests, build, and security scanning.
-
-## GitHub Workflow
-
-- `.github/ISSUE_TEMPLATE/ai_task.yml` for AI-ready task intake.
-- `.github/pull_request_template.md` for verification and review evidence.
-
-Keeps GitHub Issues and PRs speaking the same governance language as Claude
-Code, Codex, and local task cards.
