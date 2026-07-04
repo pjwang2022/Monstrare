@@ -53,5 +53,5 @@ if [[ ! -d "$target/tools/kanban" ]]; then
   cp -R "$root/tools/kanban" "$target/tools/"
 fi
 
-echo "AI Coding Governance Kit installed."
+echo "Monstrare installed."
 

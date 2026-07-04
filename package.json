@@ -1,7 +1,7 @@
 {
-  "name": "ai-coding-governance-kit",
+  "name": "monstrare",
   "private": true,
-  "description": "A cloneable workflow layer for AI coding agents.",
+  "description": "A gate-based governance workflow for AI coding agents. Nothing ships without evidence.",
   "scripts": {
     "kanban": "node tools/kanban/server.mjs"
   }

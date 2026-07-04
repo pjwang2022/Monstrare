@@ -1,49 +1,82 @@
-# AI Coding Governance Kit
+# Monstrare
 
-A cloneable workflow layer for AI coding agents.
+**English** | [繁體中文](README.zh-TW.md)
 
-This repository is designed to be copied into an existing software project so
-Claude Code, Codex, and other agentic coding tools can follow the same product,
-architecture, implementation, security, and verification process.
+**A cloneable workflow layer that stops AI coding agents from shipping non-trivial changes based on vague requirements.**
 
-The goal is not to make agents more autonomous. The goal is to make agent work
-smaller, better specified, easier to review, and easier to verify.
+Copy this repo into any project. Claude Code, Codex, and other agentic tools
+then follow the same gated process — spec, plan, task cards, implementation,
+verification, review — before code reaches production.
+
+## Preview
+
+The kit ships a local, zero-dependency Kanban board (`tools/kanban/`, `npm run kanban`)
+that visualizes every task's progress through the gates below.
+
+![Kanban board](tools/kanban/docs/board-screenshot.png)
+![Roadmap view](tools/kanban/docs/roadmap-screenshot.png)
+
+## The Problem
+
+- Agents start coding from vague prompts and produce large, unreviewable diffs.
+- "Looks right" ships without tests, screenshots, or evidence.
+- Architecture and security get reviewed after the code is already written, if at all.
+- Every project reinvents its own ad-hoc process for working with agents.
+
+## How It Works
+
+Every non-trivial change moves through these phases, defined in full in
+`ai/process/workflow.md`:
+
+| Phase | Output | Gate |
+| --- | --- | --- |
+| 0. Intake | Problem statement, goal, constraints, unknowns | Vague request -> go to Clarification |
+| 1. Context Discovery | Task-specific context pack: files, patterns, risks, verification commands | — |
+| 2. Clarification | `feature-spec.md`, non-goals, acceptance criteria | Human approval |
+| 3. UI Mockup *(if UI)* | Screen/state maps, 2-3 variants, trade-offs | Human picks a variant |
+| 4. Architecture Plan | Files touched, data/API contracts, rollback plan | High-risk -> architect + security + test review |
+| 5. Task Cards | AI-ready cards meeting `definition-of-ready.md` | — |
+| 6. Implementation | One approved card at a time, small diffs | Scope change -> stop and ask |
+| 7. Verification | Tests, typecheck, lint, build, security scan, screenshots | — |
+| 8. Review | Product / UX / architecture / security / test / code review | `review-gates.md` |
+| 9. Human Acceptance | What changed, evidence, residual risk, follow-ups | No evidence -> not done |
+
+New project with no Epic/User Story backlog yet? Run the `project-kickoff`
+skill first — it splits the project into Epics -> User Stories -> Tasks and
+seeds `tools/kanban/`.
+
+## Rules Enforced On Every Agent
+
+From `AGENTS.md`, read before any agent touches this repository:
+
+- No non-trivial change from a vague request.
+- Start from context discovery, not assumptions.
+- `definition-of-ready.md` before implementation, `definition-of-done.md` before calling anything done.
+- UI changes need `screen-spec.md` + `mockup-decision.md`.
+- High-risk changes need architecture + security + test review.
+- Reuse existing patterns over new abstractions.
+- Stay inside the approved task card's scope; no unrelated file changes without saying so.
+- No completion claim without evidence: commands, output, screenshots, residual risk.
+
+Agent output is never itself an approval — humans sign off at every gate in
+`ai/process/review-gates.md`.
 
 ## What This Replaces
 
-This kit combines patterns from:
+| Inspiration | Borrowed idea |
+| --- | --- |
+| BMAD Method | Role-based AI agile workflows |
+| GitHub Spec Kit | Spec-first: clarify -> plan -> tasks -> implement |
+| Kiro Specs | Requirements, design, and task artifacts |
+| Task Master | PRD-to-task decomposition, model routing |
+| Serena | Semantic project search and context retrieval |
+| SuperClaude | Slash-command style repeatable workflows |
+| Archon | Deterministic, gate-based workflow execution |
+| Plandex | Large-context planning, diff review, controlled execution |
+| CodeRabbit / Qodo | Review-first quality gates |
 
-- BMAD Method: role-based AI agile workflows.
-- GitHub Spec Kit: spec-first development with clarify, plan, tasks, and implement phases.
-- Kiro Specs: requirements, design, and task artifacts.
-- Task Master: PRD-to-task decomposition and model routing.
-- Serena: semantic project search and context retrieval.
-- SuperClaude: slash-command style repeatable workflows.
-- Archon: deterministic, gate-based workflow execution.
-- Plandex: large-context planning, diff review, and controlled execution.
-- CodeRabbit and Qodo: review-first quality gates.
-
-It does not vendor those tools. It provides a consistent process layer that can
-call or coexist with them.
-
-## Core Idea
-
-AI should not begin implementation from vague intent.
-
-Every non-trivial change must move through these gates:
-
-```text
-Intake
--> Clarification
--> Product Spec
--> UI Mockup Gate, when UI is involved
--> Architecture Plan
--> AI-Ready Task Cards
--> Implementation
--> Verification Evidence
--> Review
--> Human Acceptance
-```
+Not vendored — this kit is a process layer that can call or coexist with any
+of them.
 
 ## Repository Layout
 
@@ -66,90 +99,61 @@ tools/kanban/                 # Local Kanban board implementing ai/process/kanba
 ## Quick Start
 
 1. Copy this folder into the root of your project.
-2. Copy `AGENTS.md` and `CLAUDE.md` to your project root, or keep them in this folder and import them from your existing agent files.
-3. Ask your agent to run the project intake:
+2. Copy `AGENTS.md` and `CLAUDE.md` to your project root, or keep them here and import them from your existing agent files.
+3. Run project intake:
 
-```text
-Use the project-search skill to create ai/context/project-map.md and ai/context/code-search-guide.md.
-Do not implement anything yet.
-```
+   ```text
+   Use the project-search skill to create ai/context/project-map.md and ai/context/code-search-guide.md.
+   Do not implement anything yet.
+   ```
 
 4. Start a feature through the spec gate:
 
-```text
-Use spec-interrogation for: <feature idea>.
-Create a feature spec, screen specs if UI is involved, and AI-ready task cards.
-Stop before implementation for human review.
-```
+   ```text
+   Use spec-interrogation for: <feature idea>.
+   Create a feature spec, screen specs if UI is involved, and AI-ready task cards.
+   Stop before implementation for human review.
+   ```
 
 ## Install Into Another Project
-
-From this repository:
 
 ```bash
 scripts/install-into-project.sh /path/to/your/project
 ```
 
-The installer skips existing `AGENTS.md` and `CLAUDE.md` files, then copies the
-shared process files, templates, checklists, Claude skills/subagents, and Codex
-skills into the target project.
-
-Run the kit self-check from the repository root:
+Skips existing `AGENTS.md`/`CLAUDE.md`, then copies process files, templates,
+checklists, and Claude/Codex skills into the target project.
 
 ```bash
-scripts/check-governance.sh
+scripts/check-governance.sh   # self-check from the repo root
 ```
 
 ## AI Kanban
 
-Use `ai/process/kanban.md` as the board policy. The board is not just for task
-status; it tracks whether a task is ready for safe agent execution.
-
-A working, zero-dependency implementation of this board is included at
-`tools/kanban/` (`npm run kanban`). It is optional; the policy in
-`ai/process/kanban.md` does not require this specific tool.
+`ai/process/kanban.md` is the board policy — it tracks whether a task is
+ready for safe agent execution, not just its status. The `tools/kanban/`
+implementation above is optional; the policy doesn't require this specific tool.
 
 Recommended columns:
 
 ```text
-Inbox
--> Needs Clarification
--> Needs Product Approval
--> Needs UI Mockup
--> Needs Architecture Plan
--> Needs Task Cards
--> AI Ready
--> Agent Working
--> Needs Verification
--> Needs Review
--> Human Acceptance
--> Done
+Inbox -> Needs Clarification -> Needs Product Approval -> Needs UI Mockup
+-> Needs Architecture Plan -> Needs Task Cards -> AI Ready -> Agent Working
+-> Needs Verification -> Needs Review -> Human Acceptance -> Done
 ```
-
-## Principles
-
-- Specifications are the source of truth.
-- Human review happens before implementation, not only after code is written.
-- Context is budgeted and justified.
-- Agents may search, but they must report what they read and why.
-- UI work requires mockup alternatives before implementation.
-- High-risk work requires architecture, security, and test review.
-- Completion means evidence, not assertion.
 
 ## Recommended Tool Pairings
 
-- Use Serena MCP for semantic code search when available.
-- Use Task Master when you want automated task expansion from a PRD.
-- Use Spec Kit if you want a full spec-first command stack.
-- Use CodeRabbit, Qodo, Codex Review, or Claude review agents as a final review layer.
-- Use deterministic CI checks for lint, typecheck, tests, build, and security scanning.
+- Serena MCP for semantic code search when available.
+- Task Master for automated task expansion from a PRD.
+- Spec Kit for a full spec-first command stack.
+- CodeRabbit, Qodo, Codex Review, or Claude review agents as a final review layer.
+- Deterministic CI checks for lint, typecheck, tests, build, and security scanning.
 
 ## GitHub Workflow
-
-This kit includes:
 
 - `.github/ISSUE_TEMPLATE/ai_task.yml` for AI-ready task intake.
 - `.github/pull_request_template.md` for verification and review evidence.
 
-The intent is to make GitHub Issues and PRs carry the same governance language
-as Claude Code, Codex, and local task cards.
+Keeps GitHub Issues and PRs speaking the same governance language as Claude
+Code, Codex, and local task cards.

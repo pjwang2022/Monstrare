@@ -1,6 +1,20 @@
 # 治理看板
 
-以 git 為同步機制的本地 Kanban 小工具，零依賴（只用 Node 內建模組）。原本 1:1 對應 `ai/process/kanban.md` 的 12 個治理階段，後改為 6 欄的精簡流程：`backlog`（Backlog 待辦）→ `blocked`（Blocked）→ `ready`（Ready 就緒）→ `implementing`（Implementing 進行中）→ `verify`（Verify 驗證中）→ `done`（Done 完成）。`ai/process/kanban.md` 本身未變，仍是完整的 12 階段治理政策；本工具是該政策的一種簡化實作，不要求逐欄對應（`ai/process/kanban.md` 也明講這一點）。
+以 git 為同步機制的本地 Kanban 小工具，零依賴（只用 Node 內建模組），用來把 [`ai/process/kanban.md`](../../ai/process/kanban.md) 定義的 AI 協作治理流程視覺化：每張任務卡從 Backlog 一路推進到 Done 的過程中，會經過哪些欄位、需要哪些 Readiness 檢查與人工核准，都在這個看板上一目了然。
+
+**看板分頁**（水平車道，Backlog → Blocked → Ready → Implementing → Verify → Done）：
+
+![看板分頁截圖](docs/board-screenshot.png)
+
+**藍圖分頁**（Epic → User Story → Task 的完成度總覽，資料來自 [`epics.json`](epics.json)）：
+
+![藍圖分頁截圖](docs/roadmap-screenshot.png)
+
+## 這是什麼、為什麼需要它
+
+治理套件（Monstrare）要求每個非小型變更都要經過「規格 → 架構 → 任務卡 → 實作 → 驗證 → 審查 → 人工驗收」的關卡流程。光靠文件很難追蹤「現在有哪些任務卡在哪個關卡、卡在誰手上、是不是超過 WIP 上限」，這個看板就是那個流程的即時視覺化 + 輕量資料庫：每張卡是一個 git tracked 的 JSON 檔，拖曳、勾選、留言都會即時寫回檔案，靠 `git commit` / `git push` 同步給團隊或其他 agent，不需要額外的資料庫或帳號系統。
+
+原本 1:1 對應 `ai/process/kanban.md` 的 12 個治理階段，後改為 6 欄的精簡流程：`backlog`（Backlog 待辦）→ `blocked`（Blocked）→ `ready`（Ready 就緒）→ `implementing`（Implementing 進行中）→ `verify`（Verify 驗證中）→ `done`（Done 完成）。`ai/process/kanban.md` 本身未變，仍是完整的 12 階段治理政策；本工具是該政策的一種簡化實作，不要求逐欄對應（`ai/process/kanban.md` 也明講這一點）。
 
 版面沿用 Mockup 階段選定的 **Variant A（控制塔）** 風格：水平車道逐一對應每個階段。另外兩個候選版面（階段分組、稽核清單表格）保留在 [`mockups/index.html`](mockups/index.html) 供參考，詳見 [`mockup-decision.md`](mockup-decision.md)（該文件與種子資料仍反映舊的 12 階段命名，僅供追溯選型過程，不代表目前欄位）。
 
@@ -19,7 +33,15 @@ node tools/kanban/server.mjs
 npm run kanban
 ```
 
-瀏覽器開 <http://127.0.0.1:4420>（server 只 bind 127.0.0.1，port 4420 被占用時會直接報錯，不自動換 port）。
+瀏覽器開 <http://127.0.0.1:4420>（server 只 bind 127.0.0.1，port 4420 被占用時會直接報錯，不自動換 port；若啟動失敗，先用 `lsof -i :4420` 找出佔用的程序）。
+
+## 怎麼操作
+
+- **新增卡片**：點任一車道底部的「+ 新增卡片」，輸入標題即可（id 由 server 自動配號）。
+- **移動卡片**：直接把卡片拖到別的車道（跨欄即改變 `stage`），同欄內拖曳可調整 `order`。
+- **編輯詳情**：點卡片本體開啟詳情面板，可改 owner／risk／agent／Readiness 勾選／Review Gates 勾選／留言等所有欄位。
+- **看整體進度**：切到右上角「藍圖」分頁，依 Epic → User Story 檢視完成度（需先在 [`epics.json`](epics.json) 定義 Epic／User Story）。
+- 所有操作都是即時寫回 `cards/*.json`，沒有「儲存」按鈕；要復原就用 `git checkout` 還原檔案再重新整理頁面。
 
 ## 資料與同步
 

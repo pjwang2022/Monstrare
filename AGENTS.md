@@ -1,6 +1,6 @@
 # Agent 指令
 
-本專案使用 AI Coding Governance Kit。請遵循
+本專案使用 Monstrare。請遵循
 `ai/process/workflow.md` 中的共用流程。
 
 ## 操作規則
