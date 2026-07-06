@@ -17,6 +17,7 @@
 - [ ] Lint
 - [ ] Build
 - [ ] Screenshot verification for UI
+- [ ] Design-system check for UI (tokens/components reused; new components registered in `ai/context/design-system.md`)
 - [ ] Security checks for high-risk work
 
 Commands run:

@@ -39,9 +39,12 @@ cp -R "$root/ai/checklists" "$target/ai/"
 cp -R "$root/ai/skills" "$target/ai/"
 cp -R "$root/ai/examples" "$target/ai/"
 
-if [[ ! -d "$target/ai/context" ]]; then
-  cp -R "$root/ai/context" "$target/ai/"
-fi
+# Context files are project-owned once filled in: never overwrite existing
+# ones, but do add newly introduced templates (e.g. design-system.md) that an
+# older install would not have.
+for f in "$root/ai/context"/*.md; do
+  copy_if_missing "$f" "$target/ai/context/$(basename "$f")"
+done
 
 mkdir -p "$target/.claude" "$target/.codex"
 cp -R "$root/.claude/skills" "$target/.claude/"

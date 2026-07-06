@@ -51,7 +51,7 @@
 離場條件：
 
 - 已有畫面規格書。
-- 已有 2-3 個 mockup 變體。
+- 已有 2-3 個 mockup 變體，且變體以 `ai/context/design-system.md` 既有的 token／元件組成（Epic 0 風格方向階段除外）。
 - 人工已選定一個方向。
 
 ### 待架構規劃

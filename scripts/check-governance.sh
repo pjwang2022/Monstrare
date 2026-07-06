@@ -10,6 +10,7 @@ required_files=(
   "ai/process/definition-of-done.md"
   "ai/process/review-gates.md"
   "ai/process/kanban.md"
+  "ai/context/design-system.md"
   "ai/templates/feature-spec.md"
   "ai/templates/screen-spec.md"
   "ai/templates/task-card.md"
