@@ -8,7 +8,7 @@
 2. 確定可能會變更的檔案。
 3. 定義 API、資料與狀態（state）契約。
 4. 指定風險等級。
-5. 使用 `ai/templates/task-card.md` 將工作拆分為小型任務卡。
+5. 以 `ai/templates/task-card.md` 為範本，將工作拆分為小型任務卡，產出到 `ai/artifacts/<Epic>/task-cards/<卡片id>.md`（見 `ai/artifacts/README.md`）。
 6. 確保每張任務卡都符合 `ai/process/definition-of-ready.md`。
 7. 若風險為中或高，在實作前停下來等待核准。
 

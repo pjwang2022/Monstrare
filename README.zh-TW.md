@@ -95,6 +95,7 @@ ai/templates/                 # 規格書、任務卡、審查報告範本
 ai/context/                   # 專案地圖、設計系統與搜尋指引
 ai/checklists/                # 安全性、測試與設計審查檢查清單
 ai/skills/                    # .claude/skills 與 .codex/skills 共用的 skill 內容來源
+ai/artifacts/                 # 填寫完成的規格、mockup、任務卡、驗證報告（一個 Epic 一個資料夾）
 ai/examples/                  # 任務與功能產物範例
 tools/kanban/                 # 實作 ai/process/kanban.md 的本地看板
 ```
@@ -108,6 +109,8 @@ git clone https://github.com/pjwang2022/Monstrare.git my-project
 cd my-project
 rm -rf .git && git init   # 建立你自己的 git 歷史
 ```
+
+接著把它變成你的：把 `README.md`／`README.zh-TW.md` 換成你自己專案的說明、改掉 `package.json` 的 `name`，並可視需要刪除 `scripts/install-into-project.sh` 與 `tools/kanban/` 底下的看板選型史料（`mockups/`、`mockup-decision.md`、`screen-spec.md`）——那些屬於 Monstrare 本身，不是你的專案產物。
 
 接著在這個資料夾裡開 Claude Code 或 Codex，直接講你想做什麼就好：
 
@@ -136,7 +139,9 @@ rm -rf .git && git init   # 建立你自己的 git 歷史
 scripts/install-into-project.sh /path/to/your/project
 ```
 
-會跳過目標專案已存在的 `AGENTS.md`／`CLAUDE.md`，接著把流程檔案、範本、檢查清單、Claude/Codex skills 複製過去。
+會把流程檔案、範本、檢查清單、Claude/Codex skills 與 agents、治理自我檢查腳本、GitHub PR/issue 模板，以及看板工具（剔除 Monstrare 自己的看板選型史料）複製到目標專案。
+
+不會覆蓋：已存在的 `AGENTS.md`、`CLAUDE.md`、`ai/context/` 內的檔案、`ai/artifacts/`、`.codex/config.toml`，與既有的 `tools/kanban/`。一律更新為套件最新版：`ai/process/`、`ai/templates/`、`ai/checklists/`、`ai/skills/` 與 skill stubs——若你在專案裡改過這些套件檔案，重跑安裝前請先 commit。
 
 ```bash
 scripts/check-governance.sh   # 在本專案根目錄執行，做套件自我檢查

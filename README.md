@@ -116,6 +116,7 @@ ai/templates/                 # Specs, task cards, review reports
 ai/context/                   # Project map, design system, and search guides
 ai/checklists/                # Security, testing, and design review gates
 ai/skills/                    # Canonical skill content shared by .claude/skills and .codex/skills
+ai/artifacts/                 # Completed specs, mockups, task cards, verification reports (one folder per Epic)
 ai/examples/                  # Example task and feature artifacts
 tools/kanban/                 # Local Kanban board implementing ai/process/kanban.md
 ```
@@ -130,6 +131,12 @@ git clone https://github.com/pjwang2022/Monstrare.git my-project
 cd my-project
 rm -rf .git && git init   # start your own history
 ```
+
+Then make it yours: replace `README.md`/`README.zh-TW.md` with your own
+project's readme, rename `package.json`'s `name`, and optionally delete
+`scripts/install-into-project.sh` and the board-design history under
+`tools/kanban/` (`mockups/`, `mockup-decision.md`, `screen-spec.md`) — those
+belong to Monstrare itself, not your project.
 
 Then open Claude Code or Codex in that folder and just describe what you want
 to build:
@@ -168,8 +175,15 @@ Stop before implementation for human review.
 scripts/install-into-project.sh /path/to/your/project
 ```
 
-Skips existing `AGENTS.md`/`CLAUDE.md`, then copies process files, templates,
-checklists, and Claude/Codex skills into the target project.
+Copies process files, templates, checklists, Claude/Codex skills and agents,
+the governance self-check, GitHub PR/issue templates, and the kanban tool
+(minus Monstrare's own board-design history) into the target project.
+
+Never overwritten: existing `AGENTS.md`, `CLAUDE.md`, `ai/context/` files,
+`ai/artifacts/`, `.codex/config.toml`, and an existing `tools/kanban/`.
+Always updated to the kit's latest version: `ai/process/`, `ai/templates/`,
+`ai/checklists/`, `ai/skills/`, and the skill stubs — if you've locally
+modified those kit files, commit before re-running the installer.
 
 ```bash
 scripts/check-governance.sh   # self-check from the repo root

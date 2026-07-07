@@ -9,7 +9,8 @@
 - 從情境探索（context discovery）與任務專屬的情境包（context pack）開始。
 - 實作前使用 `ai/process/definition-of-ready.md`。
 - 宣告完成前使用 `ai/process/definition-of-done.md`。
-- UI 變更需要 `ai/templates/screen-spec.md` 與 `ai/templates/mockup-decision.md`，並先對照 `ai/context/design-system.md`：重用既有 design token 與元件，缺的元件照既有風格補做並登記回元件庫 inventory。
+- UI 變更需要畫面規格與 mockup 決策紀錄（以 `ai/templates/screen-spec.md`、`ai/templates/mockup-decision.md` 為範本，產出到 `ai/artifacts/<Epic>/`），並先對照 `ai/context/design-system.md`：重用既有 design token 與元件，缺的元件照既有風格補做並登記回元件庫 inventory。
+- 範本（`ai/templates/`）唯讀；所有填寫完成的產出物依 `ai/artifacts/README.md` 的慣例存放。
 - 任何 mockup 或前端視覺實作，套用 `ai/skills/design-craft.md` 的設計工藝紀律，交付前對照 `ai/checklists/design-review-checklist.md`。
 - Epic 0 的 UI 設計系統須依五階段（框架 → 風格 → design token → 元件庫 → 版面）分關卡展開，不得一步到位直接畫版面（見 `ai/skills/project-kickoff.md` 步驟 2a）。
 - 高風險變更需要架構、安全性與測試審查關卡（review gate）。

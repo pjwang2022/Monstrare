@@ -65,7 +65,7 @@
 
 選定的每個 User Story，寫進對應 Epic 底下的 `stories[].name` / `definition`。
 
-若某個 Epic 的範圍還不清楚，先用 `spec-interrogation` skill 產出這個 Epic 的 `ai/templates/feature-spec.md`；規格書裡的「User Stories」章節就對應這裡勾選出的清單。
+若某個 Epic 的範圍還不清楚，先用 `spec-interrogation` skill 產出這個 Epic 的功能規格書（`ai/artifacts/<Epic>/feature-spec.md`）；規格書裡的「User Stories」章節就對應這裡勾選出的清單。
 
 ### MECE 檢查（適用於步驟 3 與步驟 4，在呈現候選清單給使用者之前完成）
 
@@ -104,7 +104,7 @@
 2. 探索是否有現成套件或框架可以解決這個任務，避免自己重造輪子。若有 2-3 個合理選項，列出來問使用者要用哪個並給出自己的建議；只有一個明顯選擇時才不用問。
 3. 開始實作。每個階段性成果都要讓系統維持「完整可用」的狀態，不能留下寫一半、會讓系統壞掉或啟動不了的半成品。
 4. 自己檢查正確性：寫並跑過單元測試與整合測試，不是只憑肉眼看程式碼。
-5. 確認沒問題後，把看板上這張卡的狀態往前推（`implementing` → `verify` → `done`），並視情況記錄驗證證據（對應 `test-verification` skill 與 `ai/templates/verification-report.md`）。
+5. 確認沒問題後，把看板上這張卡的狀態往前推（`implementing` → `verify` → `done`），並視情況記錄驗證證據（用 `test-verification` skill，以 `ai/templates/verification-report.md` 為範本產出到 `ai/artifacts/<Epic>/verification/`）。
 
 ### 7. 資安紀律（每一張任務卡都要做，不是只有高風險才做）
 

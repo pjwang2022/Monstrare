@@ -74,5 +74,5 @@
 
 | 介面／使用者端 | 選定版型 | Mockup 決策紀錄 | 人工核准 |
 |---|---|---|---|
-| 待補（例如 管理員後台） | 待補 | 連結到 `ai/templates/mockup-decision.md` 的紀錄 | 待補 |
+| 待補（例如 管理員後台） | 待補 | 連結到 `ai/artifacts/<Epic>/mockup-decision-<畫面>.md` | 待補 |
 | 待補（例如 顧客前台） | 待補 | 待補 | 待補 |

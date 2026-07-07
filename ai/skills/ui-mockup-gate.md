@@ -15,11 +15,11 @@
 ## 步驟
 
 1. 讀 `ai/context/design-system.md`，列出這個畫面會用到的既有 token 與元件；盤點是否有缺的元件需照上方規則補做。
-2. 建立或更新 `ai/templates/screen-spec.md`。
+2. 以 `ai/templates/screen-spec.md` 為範本，建立或更新 `ai/artifacts/<Epic>/screen-spec-<畫面>.md`（範本唯讀，不得覆寫；見 `ai/artifacts/README.md`）。
 3. 列出所有必要狀態：預設、載入中、空狀態、錯誤、停用、權限不足、行動裝置版。
-4. 產出 2-3 個 mockup 變體（皆以既有 token／元件組成）。
+4. 產出 2-3 個 mockup 變體（皆以既有 token／元件組成），存到 `ai/artifacts/<Epic>/mockups/`，檔名含畫面與變體（例如 `dashboard-variant-a.html`）。
 5. 依清晰度、資訊密度、實作複雜度與風險比較各變體。
-6. 將決策記錄於 `ai/templates/mockup-decision.md`。
+6. 以 `ai/templates/mockup-decision.md` 為範本，將決策記錄於 `ai/artifacts/<Epic>/mockup-decision-<畫面>.md`。
 7. 在人工選擇變體之前，停止進行實作。
 
 ## Style tile 變體（Epic 0 步驟 2a 的 S2 階段專用）

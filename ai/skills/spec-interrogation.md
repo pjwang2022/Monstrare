@@ -7,7 +7,7 @@
 1. 將需求重述為「問題」而非「解法」。
 2. 確定使用者、目標、非目標與風險。
 3. 只詢問阻擋性（blocking）問題。若某假設合理且安全，則直接記錄下來。
-4. 產出 `ai/templates/feature-spec.md`。
+4. 以 `ai/templates/feature-spec.md` 為範本，產出 `ai/artifacts/<Epic>/feature-spec.md`（範本本身唯讀，不得覆寫；見 `ai/artifacts/README.md`）。
 5. 使用可測試的需求語言撰寫。
 6. 在進入架構規劃前，停下來等待人工核准。
 

@@ -41,7 +41,7 @@
 
 必要輸出：
 
-- `ai/templates/feature-spec.md`
+- 功能規格書：以 `ai/templates/feature-spec.md` 為範本，產出到 `ai/artifacts/<Epic>/feature-spec.md`（所有產出物的存放慣例見 `ai/artifacts/README.md`；範本唯讀，不得覆寫）。
 - 待釐清問題。
 - 明確的非目標。
 - 驗收標準。
