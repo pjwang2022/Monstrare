@@ -210,7 +210,7 @@
 <script>
 (function () {
   "use strict";
-  var COMMENT_AUTHOR = "PJ";
+  var COMMENT_AUTHOR = ""; // 開頁時由 /api/config 帶入本機 git user.name
 
   var STAGES = [
     { id: "backlog",       label: "Backlog 待辦",      color: "#5b6472" },
@@ -250,7 +250,8 @@
   function loadAll() {
     return Promise.all([
       api("/api/cards").then(function (list) { TICKETS = list; }),
-      api("/api/epics").then(function (data) { EPICS = data.epics || []; })
+      api("/api/epics").then(function (data) { EPICS = data.epics || []; }),
+      api("/api/config").then(function (cfg) { COMMENT_AUTHOR = cfg.owner || "匿名"; })
     ]);
   }
   function saveOne(tk) {

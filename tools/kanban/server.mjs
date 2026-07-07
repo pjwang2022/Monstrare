@@ -7,6 +7,7 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 
 const HOST = '127.0.0.1';
 const PORT = 4420;
@@ -21,6 +22,16 @@ fs.mkdirSync(CARDS_DIR, { recursive: true });
 // Customize this per project (e.g. team or product initials). Card IDs are
 // generated as `${ID_PREFIX}-001`, `${ID_PREFIX}-002`, ...
 const ID_PREFIX = 'TASK';
+
+// 新卡片 owner 與看板留言作者的預設值：取本機 git 身分（這個看板本來就以
+// git 為同步機制），沒有 git 或沒設 user.name 時留空字串（未指派）。
+const DEFAULT_OWNER = (() => {
+  try {
+    return execSync('git config user.name', { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  } catch {
+    return '';
+  }
+})();
 const ID_RE = new RegExp('^' + ID_PREFIX + '-\\d{3,}$');
 const STAGES = ['backlog', 'blocked', 'ready', 'implementing', 'verify', 'done'];
 const ADVANCED_STAGES = ['ready', 'implementing', 'verify', 'done'];
@@ -291,7 +302,7 @@ function handlePost(res, body) {
     content: typeof input.content === 'string' ? input.content : '',
     stage,
     risk: RISKS.includes(input.risk) ? input.risk : 'low',
-    owner: typeof input.owner === 'string' ? input.owner : 'PJ',
+    owner: typeof input.owner === 'string' ? input.owner : DEFAULT_OWNER,
     agent: typeof input.agent === 'string' ? input.agent : '',
     approvalRequired: !!input.approvalRequired,
     createdAt: todayStr(),
@@ -333,6 +344,11 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(fs.readFileSync(INDEX_HTML));
       return;
+    }
+
+    if (pathname === '/api/config') {
+      if (req.method === 'GET') return sendJson(res, 200, { owner: DEFAULT_OWNER });
+      return sendJson(res, 405, { error: 'method not allowed' });
     }
 
     if (pathname === '/api/epics') {

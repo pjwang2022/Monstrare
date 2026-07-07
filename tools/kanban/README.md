@@ -49,7 +49,7 @@ npm run kanban
 - 看板上的所有操作（拖曳、勾選 Readiness/Gates、編輯欄位、新增、刪除、留言）即時寫回對應 JSON 檔。
 - 同步 = git：`git commit` / `git push` 就是存檔與分享，多人協作靠 git 合併。
 - 也可以直接改 JSON 檔（或 `git checkout` 還原），重新整理頁面即生效。
-- 留言作者目前固定為 `PJ`（`index.html` 的 `COMMENT_AUTHOR`），未來可換成登入者。
+- 新卡片的預設 owner 與留言作者取自本機 `git config user.name`（server 啟動時讀一次，經 `GET /api/config` 提供給前端）；沒設定時 owner 留空、留言作者顯示「匿名」。
 
 ## WIP 上限
 
@@ -85,6 +85,7 @@ npm run kanban
 
 | Method | Path | 說明 |
 | --- | --- | --- |
+| `GET` | `/api/config` | 看板設定（目前只有 `owner`：本機 `git config user.name`，作為新卡 owner 與留言作者的預設值） |
 | `GET` | `/api/epics` | 讀取 [`epics.json`](epics.json)（Epic → User Story 定義，唯讀，沒有寫入 API，要改就直接編輯檔案） |
 | `GET` | `/api/cards` | 全部卡片（陣列） |
 | `PUT` | `/api/cards/:id` | 覆寫單卡（body 為完整 card） |
@@ -108,7 +109,7 @@ npm run kanban
 
 ## 已知限制（v1）
 
-- 沒有帳號系統，留言作者固定寫死。
+- 沒有帳號系統，身分只取自本機 git 設定，無法區分同名使用者、也沒有權限控管。
 - `content` / 留言不支援 markdown 渲染，純文字顯示。
 - 沒有多人即時協作（沒有 WebSocket），要靠重新整理頁面看到別人 git pull 後的異動。
 - 手機版尚未特別優化（多欄橫向捲動在小螢幕會更明顯），對應 `screen-spec.md` 的 Mobile 狀態尚待處理。
