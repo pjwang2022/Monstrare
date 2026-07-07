@@ -47,6 +47,28 @@ New project with no Epic/User Story backlog yet? Run the `project-kickoff`
 skill first — it splits the project into Epics -> User Stories -> Tasks and
 seeds `tools/kanban/`.
 
+## Design Quality: Two Layers
+
+UI work is governed by two complementary layers — process alone produces
+compliant-but-ugly screens, so the kit ships both:
+
+1. **Design system (what to use)** — Epic 0 builds the design system in five
+   human-gated stages (framework -> style direction -> design tokens ->
+   component library -> page layouts), persisted to
+   `ai/context/design-system.md`. Every later UI task must reuse those
+   tokens/components; missing components are built in the same style and
+   registered back into the inventory.
+2. **Design craft (how to make it good)** — `ai/skills/design-craft.md`
+   carries the visual-quality discipline (Refactoring UI principles, type
+   scale, 4px spacing grid, layered color systems, depth rules, five
+   interactive states) plus a curated list of high-quality open-source
+   references to compare against before designing. Deliverables are checked
+   against `ai/checklists/design-review-checklist.md`.
+
+Both live in the repository, so every machine and every agent (Claude Code,
+Codex, ...) that clones the repo gets the same design standard — no hidden
+dependency on skills installed in someone's home directory.
+
 ## Rules Enforced On Every Agent
 
 From `AGENTS.md`, read before any agent touches this repository:
@@ -54,7 +76,7 @@ From `AGENTS.md`, read before any agent touches this repository:
 - No non-trivial change from a vague request.
 - Start from context discovery, not assumptions.
 - `definition-of-ready.md` before implementation, `definition-of-done.md` before calling anything done.
-- UI changes need `screen-spec.md` + `mockup-decision.md`.
+- UI changes need `screen-spec.md` + `mockup-decision.md`, reuse the design system in `ai/context/design-system.md`, and follow the `design-craft` visual discipline.
 - High-risk changes need architecture + security + test review.
 - Reuse existing patterns over new abstractions.
 - Stay inside the approved task card's scope; no unrelated file changes without saying so.
@@ -91,8 +113,8 @@ CLAUDE.md                     # Claude Code entrypoint
 .codex/config.toml            # Optional Codex local defaults
 ai/process/                   # Shared workflow rules
 ai/templates/                 # Specs, task cards, review reports
-ai/context/                   # Project map and search guides
-ai/checklists/                # Security and testing gates
+ai/context/                   # Project map, design system, and search guides
+ai/checklists/                # Security, testing, and design review gates
 ai/skills/                    # Canonical skill content shared by .claude/skills and .codex/skills
 ai/examples/                  # Example task and feature artifacts
 tools/kanban/                 # Local Kanban board implementing ai/process/kanban.md

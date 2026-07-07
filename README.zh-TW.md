@@ -41,6 +41,15 @@
 
 全新專案、還沒有 Epic/User Story 待辦清單？先跑 `project-kickoff` skill——會把專案拆成 Epic → User Story → Task，並把資料建進 `tools/kanban/`。
 
+## 設計品質：兩層防線
+
+UI 工作由兩個互補的層次把關——只有流程會做出「合規但醜」的畫面，所以套件兩層都內建：
+
+1. **設計系統（用什麼）**——Epic 0 以五個人工關卡階段建立設計系統（框架 → 風格方向 → design token → 元件庫 → 版面），持久化在 `ai/context/design-system.md`。之後所有 UI 任務都必須重用這些 token／元件；缺的元件照既有風格補做並登記回元件庫 inventory。
+2. **設計工藝（怎麼做得好看）**——`ai/skills/design-craft.md` 承載視覺品質紀律（Refactoring UI 原則、type scale、4 的倍數間距、分階色彩系統、depth 規則、互動五態），並附一份高品質開源參考清單，設計前先比對、不憑記憶瞎猜。交付前逐項對照 `ai/checklists/design-review-checklist.md`。
+
+兩層都住在 repo 裡，所以任何電腦、任何 agent（Claude Code、Codex⋯）clone 下來就拿到同一套設計水準——不依賴某台電腦 home 目錄裡裝的隱形 skill。
+
 ## 對每個 agent 設下的規則
 
 出自 `AGENTS.md`，任何 agent 動手做事之前都要先讀：
@@ -48,7 +57,7 @@
 - 不得根據模糊需求做非小型變更。
 - 從情境探索開始，不能靠假設。
 - 實作前要符合 `definition-of-ready.md`，宣告完成前要符合 `definition-of-done.md`。
-- UI 變更需要 `screen-spec.md` + `mockup-decision.md`。
+- UI 變更需要 `screen-spec.md` + `mockup-decision.md`，重用 `ai/context/design-system.md` 的設計系統，並遵循 `design-craft` 的視覺紀律。
 - 高風險變更需要架構 + 安全性 + 測試審查。
 - 優先沿用既有模式，而非新增抽象層。
 - 變更範圍限制在已核准任務卡內；動了不相關檔案要說清楚。
@@ -83,8 +92,8 @@ CLAUDE.md                     # Claude Code 入口
 .codex/config.toml            # Codex 本機預設設定（選用）
 ai/process/                   # 共用的流程規則
 ai/templates/                 # 規格書、任務卡、審查報告範本
-ai/context/                   # 專案地圖與搜尋指引
-ai/checklists/                # 安全性與測試關卡檢查清單
+ai/context/                   # 專案地圖、設計系統與搜尋指引
+ai/checklists/                # 安全性、測試與設計審查檢查清單
 ai/skills/                    # .claude/skills 與 .codex/skills 共用的 skill 內容來源
 ai/examples/                  # 任務與功能產物範例
 tools/kanban/                 # 實作 ai/process/kanban.md 的本地看板

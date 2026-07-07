@@ -12,6 +12,7 @@
 - 程式碼庫搜尋：`project-search`
 - 需求釐清：`spec-interrogation`
 - UI 替代方案與畫面狀態：`ui-mockup-gate`
+- UI 視覺品質與設計工藝：`design-craft`
 - 技術規劃與任務卡：`implementation-plan`
 - 安全性與可維護性審查：`security-maintainability-review`
 - 測試與驗證證據：`test-verification`

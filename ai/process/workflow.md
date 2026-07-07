@@ -54,7 +54,7 @@
 
 涉及畫面、視覺狀態或互動流程時需要。
 
-先讀 `ai/context/design-system.md`（Epic 0 產出的設計系統單一事實來源）。mockup 變體必須以其中已定案的 design token 與元件庫組成，不得憑空發明新風格；缺的元件依 `ai/skills/ui-mockup-gate.md` 的「查庫→照風格補做→登記回庫」規則處理。
+先讀 `ai/context/design-system.md`（Epic 0 產出的設計系統單一事實來源）。mockup 變體必須以其中已定案的 design token 與元件庫組成，不得憑空發明新風格；缺的元件依 `ai/skills/ui-mockup-gate.md` 的「查庫→照風格補做→登記回庫」規則處理。視覺品質套用 `ai/skills/design-craft.md` 的設計工藝紀律。
 
 必要輸出：
 
@@ -110,7 +110,7 @@
 - 若有 2-3 個可行的函式庫或做法，詢問使用者要用哪一種並提出建議。重大選擇不要自己悶著頭選。
 - 除非有新事證需要更新計畫，否則只能動允許範圍內的檔案。
 - 遵循既有專案模式。
-- UI 實作一律取用 `ai/context/design-system.md` 的 design token 與元件庫，不硬寫一次性的色彩、間距或字級；新做的元件要照既有 token 與風格製作，完成後登記回元件庫 inventory。
+- UI 實作一律取用 `ai/context/design-system.md` 的 design token 與元件庫，不硬寫一次性的色彩、間距或字級；新做的元件要照既有 token 與風格製作，完成後登記回元件庫 inventory。視覺實作全程遵循 `ai/skills/design-craft.md`，交付前對照 `ai/checklists/design-review-checklist.md`。
 - 保持 diff 小。
 - 每個增量都必須讓系統維持在可運作、可執行的狀態，絕不能任務做到一半就停下、留下壞掉或無法啟動的系統。
 - 隨著變更新增或更新測試。

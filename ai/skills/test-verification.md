@@ -9,7 +9,7 @@
 3. 先執行針對性的測試。
 4. 於必要時執行 lint／型別檢查（typecheck）／建置。
 5. 對於 UI 變更，若工具允許，擷取桌面版與行動裝置版的螢幕截圖。
-6. 對照 `ai/checklists/testing-checklist.md` 逐項確認（測試是否會在沒修復前失敗、邊界案例與權限/錯誤路徑是否覆蓋等）。
+6. 對照 `ai/checklists/testing-checklist.md` 逐項確認（測試是否會在沒修復前失敗、邊界案例與權限/錯誤路徑是否覆蓋等）；UI 變更另對照 `ai/checklists/design-review-checklist.md`。
 7. 使用 `ai/templates/verification-report.md` 記錄證據。
 
 ## 輸出
